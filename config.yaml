@@ -1,8 +1,0 @@
-operatingSystem: ubuntu:latest
-workdir: /code-runner
-compiler: gcc
-assignmentWorkdir: /workdir
-command: gcc
-filesInCmd:
-  - main.c
-serverPort: 8082
