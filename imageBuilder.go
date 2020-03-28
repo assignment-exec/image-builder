@@ -1,14 +1,14 @@
 package main
 
 import (
-	"assignment-exec/image-builder/readConfig"
+	"assignment-exec/image-builder/dockerConfig"
 	"fmt"
 	"log"
 )
 
 func main() {
 	fmt.Println("Creating Dockerfile...")
-	config,err := readConfig.GetConfig("config.yaml")
+	config,err := dockerConfig.GetConfig("config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}

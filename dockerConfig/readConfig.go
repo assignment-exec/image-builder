@@ -1,4 +1,4 @@
-package readConfig
+package dockerConfig
 
 import (
 	"gopkg.in/yaml.v2"
