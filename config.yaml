@@ -1,8 +1,14 @@
-operatingSystem: ubuntu:latest
-workdir: /code-runner
-compiler: gcc
-assignmentWorkdir: /workdir
-command: gcc
-filesInCmd:
-  - main.c
-serverPort: 8082
+serverConfig:
+  from: golang
+  env:
+    GOMODULE: on
+    GOFLAGS: -mod=vendor
+  copy:
+    baseDir: .
+    destDir: /code-runner
+  workdir: /code-runner
+  run: make
+  serverPort: 8082
+  cmd: ./code-runner-server
+
+# TODO: assignment config

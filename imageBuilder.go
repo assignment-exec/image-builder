@@ -8,10 +8,16 @@ import (
 
 func main() {
 	fmt.Println("Creating Dockerfile...")
-	config,err := dockerConfig.GetConfig("config.yaml")
+
+	// read the yaml config
+	config,err := dockerConfig.UnmarshalYAML("config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error while reading yaml config %v",err)
 	}
 
-	fmt.Println(config)
+	// create a dockerfile with the above read configs
+	err = dockerConfig.WriteDockerfile(*config)
+	if err != nil{
+		log.Fatalf("Error occurred while writing Dockerfile %v",err)
+	}
 }
