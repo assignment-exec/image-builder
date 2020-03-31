@@ -86,18 +86,15 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	return mapString
 }
 
-func parseEnv(value map[string]interface{}) instruction {
-	v := convertMapToMap(value)
-	var env env
-	if v["GOMODULE"] != "" {
-		env.GOMODULE = v["GOMODULE"]
+func parseEnv(data map[string]interface{}) instruction {
+	convertedData := convertMapToMap(data)
+	var envObj env
+	envObj.EnvParams = make(map[string]string)
+	for key, value := range convertedData {
+		envObj.EnvParams[key] = value
 	}
 
-	if v["GOFLAGS"] != "" {
-		env.GOFLAGS = v["GOFLAGS"]
-	}
-
-	return env
+	return envObj
 }
 
 func parseWorkDir(value map[string]interface{}) instruction {

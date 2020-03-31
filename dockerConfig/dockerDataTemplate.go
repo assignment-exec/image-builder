@@ -31,24 +31,26 @@ type from struct {
 	As    string `yaml:"as"`
 }
 
-func (f from) Render() string {
-	result := fmt.Sprintf("FROM %s", f.Image)
+func (fromObj from) Render() string {
+	result := fmt.Sprintf("FROM %s", fromObj.Image)
 
-	if f.As != "" {
-		result = fmt.Sprintf("%s As %s", result, f.As)
+	if fromObj.As != "" {
+		result = fmt.Sprintf("%s As %s", result, fromObj.As)
 	}
 
 	return result
 }
 
 type env struct {
-	GOMODULE string `yaml:"GOMODULE"`
-	GOFLAGS    string `yaml:"GOFLAGS"`
+	EnvParams map[string]string
 }
 
-func (f env) Render() string {
-	result := fmt.Sprintf("ENV GOMODULE=%s", f.GOMODULE)
-	result = fmt.Sprintf("%s\nENV GOFLAGS=%s", result, f.GOFLAGS)
+func (envObj env) Render() string {
+
+	var result string
+	for key, value := range envObj.EnvParams {
+		result = fmt.Sprintf("%s\nENV %s=%s",result,key,value)
+	}
 
 	return result
 }
@@ -59,8 +61,8 @@ type copyCommand struct {
 
 }
 
-func (f copyCommand) Render() string {
-	result := fmt.Sprintf("COPY %s %s", f.BaseDir,f.DestDir)
+func (cpyObj copyCommand) Render() string {
+	result := fmt.Sprintf("COPY %s %s", cpyObj.BaseDir, cpyObj.DestDir)
 	return result
 }
 
@@ -69,8 +71,8 @@ type workDir struct {
 
 }
 
-func (f workDir) Render() string {
-	result := fmt.Sprintf("WORKDIR %s", f.BaseDir)
+func (wrkObj workDir) Render() string {
+	result := fmt.Sprintf("WORKDIR %s", wrkObj.BaseDir)
 	return result
 }
 
@@ -79,8 +81,8 @@ type runCommand struct {
 
 }
 
-func (f runCommand) Render() string {
-	result := fmt.Sprintf("RUN %s", f.Param)
+func (runObj runCommand) Render() string {
+	result := fmt.Sprintf("RUN %s", runObj.Param)
 	return result
 }
 
@@ -89,8 +91,8 @@ type serverPort struct {
 
 }
 
-func (f serverPort) Render() string {
-	result := fmt.Sprintf("EXPOSE %s", f.Number)
+func (portObj serverPort) Render() string {
+	result := fmt.Sprintf("EXPOSE %s", portObj.Number)
 	return result
 }
 
@@ -99,9 +101,9 @@ type cmd struct {
 
 }
 
-func (f cmd) Render() string {
+func (cmdObj cmd) Render() string {
 	var params []string
-	for _,p := range f.Params {
+	for _,p := range cmdObj.Params {
 		params = append(params, fmt.Sprintf("\"%s\"", p))
 	}
 
