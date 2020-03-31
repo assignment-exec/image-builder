@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
-
 	//"log"
 )
 
@@ -170,7 +169,7 @@ func parseInnerInstructions(in map[string]interface{}) instruction {
 		}
 	}
 	log.Fatal("unknown instruction in yaml")
-	return  nil
+	return nil
 }
 
 func unmarshalYamlFile(filename string, node *yaml.Node) error {

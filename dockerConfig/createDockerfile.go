@@ -18,5 +18,5 @@ func WriteDockerfile() error {
 	}
 
 	err = tmpl.generateTemplate(file)
-	return  err
+	return err
 }

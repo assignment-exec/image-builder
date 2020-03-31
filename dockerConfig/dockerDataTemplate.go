@@ -49,7 +49,7 @@ func (envObj env) Render() string {
 
 	var result string
 	for key, value := range envObj.EnvParams {
-		result = fmt.Sprintf("%s\nENV %s=%s",result,key,value)
+		result = fmt.Sprintf("%s\nENV %s=%s", result, key, value)
 	}
 
 	return result
@@ -58,7 +58,6 @@ func (envObj env) Render() string {
 type copyCommand struct {
 	BaseDir string `yaml:"basedir"`
 	DestDir string `yaml:"destdir"`
-
 }
 
 func (cpyObj copyCommand) Render() string {
@@ -68,7 +67,6 @@ func (cpyObj copyCommand) Render() string {
 
 type workDir struct {
 	BaseDir string `yaml:"dir"`
-
 }
 
 func (wrkObj workDir) Render() string {
@@ -78,7 +76,6 @@ func (wrkObj workDir) Render() string {
 
 type runCommand struct {
 	Param string `yaml:"param"`
-
 }
 
 func (runObj runCommand) Render() string {
@@ -88,7 +85,6 @@ func (runObj runCommand) Render() string {
 
 type serverPort struct {
 	Number string `yaml:"number"`
-
 }
 
 func (portObj serverPort) Render() string {
@@ -98,12 +94,11 @@ func (portObj serverPort) Render() string {
 
 type cmd struct {
 	Params []string `yaml:"params"`
-
 }
 
 func (cmdObj cmd) Render() string {
 	var params []string
-	for _,p := range cmdObj.Params {
+	for _, p := range cmdObj.Params {
 		params = append(params, fmt.Sprintf("\"%s\"", p))
 	}
 
