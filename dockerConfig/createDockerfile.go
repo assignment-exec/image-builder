@@ -1,27 +1,20 @@
 package dockerConfig
 
-import (
-	"fmt"
-	"io"
-	"log"
-	"os"
-)
+// Generates a dockerfile instructions As a string
+/*func Render(config dockerfileData) string {
+	result := fmt.Sprintf("FROM %s\n", config.ServerConfig.from)
 
-// Generates a dockerfile instructions as a string
-func render(config dockerfileData) string {
-	result := fmt.Sprintf("FROM %s\n", config.ServerConfig.From)
-
-	for goEnv, value := range config.ServerConfig.Env {
+	for goEnv, value := range config.ServerConfig.env {
 		result += fmt.Sprintf("ENV %s=%s\n", goEnv, value)
 	}
 
-	result += fmt.Sprintf("COPY %s %s\n", config.ServerConfig.Copy["baseDir"], config.ServerConfig.Copy["destDir"])
+	result += fmt.Sprintf("COPY %s %s\n", config.ServerConfig.copyCommand["BaseDir"], config.ServerConfig.copyCommand["DestDir"])
 
-	result += fmt.Sprintf("WORKDIR %s\n", config.ServerConfig.WorkDir)
+	result += fmt.Sprintf("WORKDIR %s\n", config.ServerConfig.workDir)
 
-	result += fmt.Sprintf("RUN %s\n", config.ServerConfig.RunCommand)
+	result += fmt.Sprintf("RUN %s\n", config.ServerConfig.runCommand)
 
-	result += fmt.Sprintf("EXPOSE %s\n", config.ServerConfig.ServerPort)
+	result += fmt.Sprintf("EXPOSE %s\n", config.ServerConfig.serverPort)
 
 	result += fmt.Sprintf("CMD [\"%s\"]\n", config.ServerConfig.FinalCmd)
 
@@ -31,7 +24,7 @@ func render(config dockerfileData) string {
 
 // creates and writes the rendered string into dockerfile
 func WriteDockerfile(config dockerfileData) error {
-	result := render(config)
+	result := Render(config)
 	file, err := os.Create("Dockerfile")
 	if err != nil {
 		return err
@@ -49,4 +42,4 @@ func WriteDockerfile(config dockerfileData) error {
 		return err
 	}
 	return file.Sync()
-}
+}*/

@@ -1,35 +1,112 @@
 package dockerConfig
 
 import (
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"log"
+	"fmt"
+	"strings"
 )
 
-type dockerfileData struct {
-	ServerConfig struct {
-		From       string            `yaml:"from"`
-		Env        map[string]string `yaml:"env"`
-		Copy       map[string]string `yaml:"copy"`
-		WorkDir    string            `yaml:"workdir"`
-		RunCommand string            `yaml:"run"`
-		ServerPort string            `yaml:"serverPort"`
-		FinalCmd   string            `yaml:"cmd"`
-	} `yaml:"serverConfig"`
+type instruction interface {
+	Render() string
 }
 
-func UnmarshalYAML(configFilename string) (*dockerfileData, error) {
-	yamlFile, err := ioutil.ReadFile(configFilename)
+type dockerfileData struct {
+	Stages []stage `yaml:"stages"`
+}
+
+type stage []instruction
+
+func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var data []interface{}
+	var result []instruction
+	err := unmarshal(&data)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		return err
+	}
+	*s = append(result, getInstructions(data)...)
+	return nil
+}
+
+type from struct {
+	Image string `yaml:"image"`
+	As    string `yaml:"as"`
+}
+
+func (f from) Render() string {
+	result := fmt.Sprintf("FROM %s", f.Image)
+
+	if f.As != "" {
+		result = fmt.Sprintf("%s As %s", result, f.As)
 	}
 
-	config := &dockerfileData{}
-	err = yaml.Unmarshal(yamlFile, config)
-	if err != nil {
-		log.Printf("Error in unmarshalling yaml: %v", err)
-		return nil, err
+	return result
+}
+
+type env struct {
+	GOMODULE string `yaml:"GOMODULE"`
+	GOFLAGS    string `yaml:"GOFLAGS"`
+}
+
+func (f env) Render() string {
+	result := fmt.Sprintf("ENV GOMODULE=%s", f.GOMODULE)
+	result = fmt.Sprintf("%s\nENV GOFLAGS=%s", result, f.GOFLAGS)
+
+	return result
+}
+
+type copyCommand struct {
+	BaseDir string `yaml:"basedir"`
+	DestDir string `yaml:"destdir"`
+
+}
+
+func (f copyCommand) Render() string {
+	result := fmt.Sprintf("COPY %s %s", f.BaseDir,f.DestDir)
+	return result
+}
+
+type workDir struct {
+	BaseDir string `yaml:"dir"`
+
+}
+
+func (f workDir) Render() string {
+	result := fmt.Sprintf("WORKDIR %s", f.BaseDir)
+	return result
+}
+
+type runCommand struct {
+	Param string `yaml:"param"`
+
+}
+
+func (f runCommand) Render() string {
+	result := fmt.Sprintf("RUN %s", f.Param)
+	return result
+}
+
+type serverPort struct {
+	Number string `yaml:"number"`
+
+}
+
+func (f serverPort) Render() string {
+	result := fmt.Sprintf("EXPOSE %s", f.Number)
+	return result
+}
+
+type cmd struct {
+	Params []string `yaml:"params"`
+
+}
+
+func (f cmd) Render() string {
+	var params []string
+	for _,p := range f.Params {
+		params = append(params, fmt.Sprintf("\"%s\"", p))
 	}
-	return config, nil
+
+	paramsString := strings.Join(params, ", ")
+	execFormString := fmt.Sprintf("[%s]", paramsString)
+	result := fmt.Sprintf("CMD %s", execFormString)
+	return result
 }
