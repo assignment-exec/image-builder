@@ -1,7 +1,7 @@
 package main
 
 import (
-	"assignment-exec/image-builder/dockerConfig"
+	"assignment-exec/image-builder/configurations"
 	"fmt"
 	"log"
 )
@@ -9,7 +9,7 @@ import (
 func main() {
 	fmt.Println("Creating Dockerfile...")
 
-	err := dockerConfig.WriteDockerfile()
+	err := configurations.WriteDockerfile()
 	if err != nil {
 		log.Fatalf("error while writing dockerfile %v", err)
 	}

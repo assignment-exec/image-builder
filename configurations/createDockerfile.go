@@ -1,4 +1,4 @@
-package dockerConfig
+package configurations
 
 import (
 	"os"
