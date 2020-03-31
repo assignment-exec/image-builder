@@ -11,11 +11,11 @@ type dockerfileTemplate struct {
 	Data *dockerfileData
 }
 
-func NewDockerfileTemplate(data *dockerfileData) *dockerfileTemplate {
+func newDockerfileTemplate(data *dockerfileData) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
-func NewDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
+func newDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
@@ -49,7 +49,7 @@ func getStagesDataFromNode(node *yaml.Node) ([]stage, error) {
 }
 
 
-func (d *dockerfileTemplate) GenerateTemplate(writer io.Writer) error {
+func (d *dockerfileTemplate) generateTemplate(writer io.Writer) error {
 	templateString := "{{- range .Stages -}}" +
 		"{{- range $i, $instruction := . }}" +
 		"{{- if gt $i 0 }}\n{{ end }}" +

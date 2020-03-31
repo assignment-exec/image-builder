@@ -152,7 +152,6 @@ func parseCopy(value map[string]interface{}) instruction {
 
 func parseFrom(value map[string]interface{}) from {
 	v := convertMapToMap(value)
-	fmt.Println(v)
 	var from from
 	if v["image"] != "" {
 		from.Image = v["image"]
