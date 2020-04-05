@@ -39,7 +39,7 @@ func getStagesDataFromNode(node *yaml.Node) ([]stage, error) {
 
 	stagesInOrder, err := getStagesOrderFromYamlNode(node)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal %v", err)
+		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 	if err := node.Decode(&data); err != nil {
 		return nil, err
