@@ -1,6 +1,7 @@
 package configurations
 
 import (
+	"log"
 	"os"
 )
 
@@ -19,5 +20,13 @@ func WriteDockerfile() error {
 	}
 
 	err = tmpl.generateDockerfileFromTemplate(file)
+
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatalf("error while closing the created Dockerfile: %v", err)
+			return
+		}
+	}()
 	return err
 }
