@@ -2,12 +2,11 @@ package main
 
 import (
 	"assignment-exec/image-builder/configurations"
-	"fmt"
 	"log"
 )
 
 func main() {
-	fmt.Println("Creating Dockerfile...")
+	log.Println("Creating Dockerfile...")
 
 	// Unmarshal the yaml configuration file and generate a dockerfile.
 	err := configurations.WriteDockerfile()

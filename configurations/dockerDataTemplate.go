@@ -6,7 +6,7 @@ import (
 )
 
 type instruction interface {
-	Render() string
+	WriteInstruction() string
 }
 
 type dockerfileData struct {
@@ -15,6 +15,7 @@ type dockerfileData struct {
 
 type stage []instruction
 
+// Decodes the yaml data and gives the stage instance having all the dockerfile instructions.
 func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var data []interface{}
 	var result []instruction
@@ -26,12 +27,14 @@ func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// FROM instructions.
 type from struct {
 	Image string `yaml:"image"`
 	As    string `yaml:"as"`
 }
 
-func (fromObj from) Render() string {
+// Gives FROM instruction for the values read from yaml.
+func (fromObj from) WriteInstruction() string {
 	result := fmt.Sprintf("FROM %s", fromObj.Image)
 
 	if fromObj.As != "" {
@@ -41,11 +44,13 @@ func (fromObj from) Render() string {
 	return result
 }
 
+// ENV instruction.
 type env struct {
 	EnvParams map[string]string
 }
 
-func (envObj env) Render() string {
+// Gives ENV instruction for the values read from yaml.
+func (envObj env) WriteInstruction() string {
 
 	var result string
 	for key, value := range envObj.EnvParams {
@@ -55,48 +60,58 @@ func (envObj env) Render() string {
 	return result
 }
 
+// COPY instruction.
 type copyCommand struct {
 	BaseDir string `yaml:"basedir"`
 	DestDir string `yaml:"destdir"`
 }
 
-func (cpyObj copyCommand) Render() string {
+// Gives COPY instruction for the values read from yaml.
+func (cpyObj copyCommand) WriteInstruction() string {
 	result := fmt.Sprintf("COPY %s %s", cpyObj.BaseDir, cpyObj.DestDir)
 	return result
 }
 
+// WORKDIR instruction.
 type workDir struct {
 	BaseDir string `yaml:"dir"`
 }
 
-func (wrkObj workDir) Render() string {
+// Gives WORKDIR instruction for the values read from yaml.
+func (wrkObj workDir) WriteInstruction() string {
 	result := fmt.Sprintf("WORKDIR %s", wrkObj.BaseDir)
 	return result
 }
 
+// RUN instruction.
 type runCommand struct {
 	Param string `yaml:"param"`
 }
 
-func (runObj runCommand) Render() string {
+// Gives RUN instruction for the values read from yaml.
+func (runObj runCommand) WriteInstruction() string {
 	result := fmt.Sprintf("RUN %s", runObj.Param)
 	return result
 }
 
+// EXPOSE instruction.
 type serverPort struct {
 	Number string `yaml:"number"`
 }
 
-func (portObj serverPort) Render() string {
+// Gives EXPOSE instruction for the values read from yaml.
+func (portObj serverPort) WriteInstruction() string {
 	result := fmt.Sprintf("EXPOSE %s", portObj.Number)
 	return result
 }
 
+// CMD instruction.
 type cmd struct {
 	Params []string `yaml:"params"`
 }
 
-func (cmdObj cmd) Render() string {
+// Gives CMD instruction for the values read from yaml.
+func (cmdObj cmd) WriteInstruction() string {
 	var params []string
 	for _, p := range cmdObj.Params {
 		params = append(params, fmt.Sprintf("\"%s\"", p))

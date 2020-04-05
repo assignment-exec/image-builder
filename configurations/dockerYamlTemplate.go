@@ -14,6 +14,7 @@ type dockerfileDataYaml struct {
 	Stages map[string]stage `yaml:"stages"`
 }
 
+// Gives all the instructions after parsing them from yaml.
 func getInstructions(in []interface{}) []instruction {
 
 	result := make([]instruction, len(in))
@@ -23,6 +24,7 @@ func getInstructions(in []interface{}) []instruction {
 	return result
 }
 
+// Parses instructions based on their type.
 func parseAllInstructions(v interface{}) instruction {
 	switch v := v.(type) {
 	case map[string]interface{}:
@@ -33,6 +35,7 @@ func parseAllInstructions(v interface{}) instruction {
 	return nil
 }
 
+// Invokes respective functions based on the instruction node being parsed.
 func parseSpecificInstruction(instructionName string, value interface{}) instruction {
 	v, ok := value.(map[string]interface{})
 	if !ok {
@@ -58,6 +61,7 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 	return nil
 }
 
+// Converts a map of string-interface to a string array.
 func convertMapToStringArray(mapInterface map[string]interface{}) []string {
 	switch v := mapInterface["params"].(type) {
 	case []interface{}:
@@ -73,6 +77,8 @@ func convertMapToStringArray(mapInterface map[string]interface{}) []string {
 	return nil
 
 }
+
+// Converts a map of string-interface to a map of string-string.
 func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	mapString := make(map[string]string)
 
@@ -85,6 +91,7 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	return mapString
 }
 
+// Parses the env instruction node from yaml and returns an instance of `env`.
 func parseEnv(data map[string]interface{}) instruction {
 	convertedData := convertMapToMap(data)
 	var envObj env
@@ -96,6 +103,7 @@ func parseEnv(data map[string]interface{}) instruction {
 	return envObj
 }
 
+// Parses the workdir instruction node and returns an instance of `workDir`.
 func parseWorkDir(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
 	var workDir workDir
@@ -105,6 +113,7 @@ func parseWorkDir(value map[string]interface{}) instruction {
 	return workDir
 }
 
+// Parses the runCommand instruction node and returns an instance of `runCommand`.
 func parseRun(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
 	var runCmd runCommand
@@ -114,6 +123,7 @@ func parseRun(value map[string]interface{}) instruction {
 	return runCmd
 }
 
+// Parses the cmd instruction node and returns an instance of `cmd`.
 func parseCmd(value map[string]interface{}) instruction {
 	var command cmd
 	v := convertMapToStringArray(value)
@@ -123,6 +133,7 @@ func parseCmd(value map[string]interface{}) instruction {
 	return command
 }
 
+// Parses the serverPort instruction node and returns an instance of `serverPort`.
 func parseServerPort(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
 	var serverPort serverPort
@@ -132,6 +143,7 @@ func parseServerPort(value map[string]interface{}) instruction {
 	return serverPort
 }
 
+// Parses the copy instruction node and returns an instance of `copyCommand`.
 func parseCopy(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
 	var cpy copyCommand
@@ -146,6 +158,7 @@ func parseCopy(value map[string]interface{}) instruction {
 	return cpy
 }
 
+// Parses the from instruction node and returns an instance of `from`.
 func parseFrom(value map[string]interface{}) from {
 	v := convertMapToMap(value)
 	var from from
@@ -160,6 +173,7 @@ func parseFrom(value map[string]interface{}) from {
 	return from
 }
 
+// Parses the instruction nodes within every stage node.
 func parseInnerInstructions(in map[string]interface{}) instruction {
 	for key, value := range in {
 
@@ -172,6 +186,7 @@ func parseInnerInstructions(in map[string]interface{}) instruction {
 	return nil
 }
 
+// Unmarshal yaml file into a yaml node.
 func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -183,6 +198,8 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	}
 	return nil
 }
+
+// Verifies the kind of the yaml node and returns the list of stage names provided.
 func getStagesOrderFromYamlNode(node *yaml.Node) ([]string, error) {
 	var stages []string
 

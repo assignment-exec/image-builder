@@ -4,6 +4,7 @@ import (
 	"os"
 )
 
+// Creates a template and writes it to a new Dockerfile.
 func WriteDockerfile() error {
 	data, err := newDockerFileDataFromYamlFile("code-runner.yaml")
 	if err != nil {
