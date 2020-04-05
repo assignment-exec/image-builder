@@ -48,7 +48,7 @@ func getStagesDataFromNode(node *yaml.Node) ([]stage, error) {
 	return stages, nil
 }
 
-func (d *dockerfileTemplate) generateTemplate(writer io.Writer) error {
+func (d *dockerfileTemplate) generateDockerfileFromTemplate(writer io.Writer) error {
 	templateString := "{{- range .Stages -}}" +
 		"{{- range $i, $instruction := . }}" +
 		"{{- if gt $i 0 }}\n{{ end }}" +

@@ -9,6 +9,7 @@ import (
 func main() {
 	fmt.Println("Creating Dockerfile...")
 
+	// Unmarshal the yaml configuration file and generate a dockerfile.
 	err := configurations.WriteDockerfile()
 	if err != nil {
 		log.Fatalf("error while writing dockerfile %v", err)

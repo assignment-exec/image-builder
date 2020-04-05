@@ -5,7 +5,7 @@ import (
 )
 
 func WriteDockerfile() error {
-	data, err := newDockerFileDataFromYamlFile("serverConfig.yaml")
+	data, err := newDockerFileDataFromYamlFile("code-runner.yaml")
 	if err != nil {
 		return err
 	}
@@ -17,6 +17,6 @@ func WriteDockerfile() error {
 		return err
 	}
 
-	err = tmpl.generateTemplate(file)
+	err = tmpl.generateDockerfileFromTemplate(file)
 	return err
 }
