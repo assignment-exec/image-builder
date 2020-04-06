@@ -15,12 +15,6 @@ func WriteDockerfile() error {
 	tmpl := newDockerfileTemplate(data)
 
 	file, err := os.Create("Dockerfile")
-	if err != nil {
-		return err
-	}
-
-	err = tmpl.generateDockerfileFromTemplate(file)
-
 	defer func() {
 		err = file.Close()
 		if err != nil {
@@ -28,5 +22,11 @@ func WriteDockerfile() error {
 			return
 		}
 	}()
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.generateDockerfileFromTemplate(file)
+
 	return err
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var expectedGenericOutput = `FROM golang:latest As golang
+var expectedGenericOutput = `FROM golang:latest
 
 ENV GOMODULE=on
 ENV GOFLAGS=-mod=vendor
@@ -18,7 +18,7 @@ CMD ["./code-runner-server"]
 
 `
 
-// Tests dockerfile template generation
+// Tests dockerfile template generation.
 func TestDockerfileTemplate(t *testing.T) {
 	data, err := newDockerFileDataFromYamlFile("../code-runner.yaml")
 	tmpl := newDockerfileTemplate(data)

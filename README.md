@@ -5,7 +5,7 @@ Image builder is an application to build docker image for running assignments. T
 There are two types of configurations provided - Code runner and Assignment Environment.
 
 ### Code Runner Configurations
-- These configurations are required for running the code-runner server.
+- These configurations are required for running the [code-runner](https://github.com/assignment-exec/code-runner) server.
 - Code runner configurations are specified in yaml format and include instructions that are needed in Dockerfile for running the server.
 Following is a sample of the configuration yaml
 ```commandline
