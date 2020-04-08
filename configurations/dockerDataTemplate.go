@@ -10,7 +10,7 @@ type instruction interface {
 }
 
 type dockerfileData struct {
-	Stages []stage `yaml:"stages"`
+	Stages []stage
 }
 
 type stage []instruction
@@ -29,8 +29,8 @@ func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // FROM instructions.
 type from struct {
-	Image string `yaml:"image"`
-	As    string `yaml:"as"`
+	Image string
+	As    string
 }
 
 // Gives FROM instruction for the values read from yaml.
@@ -62,8 +62,8 @@ func (envObj env) WriteInstruction() string {
 
 // COPY instruction.
 type copyCommand struct {
-	BaseDir string `yaml:"basedir"`
-	DestDir string `yaml:"destdir"`
+	BaseDir string
+	DestDir string
 }
 
 // Gives COPY instruction for the values read from yaml.
@@ -74,7 +74,7 @@ func (cpyObj copyCommand) WriteInstruction() string {
 
 // WORKDIR instruction.
 type workDir struct {
-	BaseDir string `yaml:"dir"`
+	BaseDir string
 }
 
 // Gives WORKDIR instruction for the values read from yaml.
@@ -85,7 +85,7 @@ func (wrkObj workDir) WriteInstruction() string {
 
 // RUN instruction.
 type runCommand struct {
-	Param string `yaml:"param"`
+	Param string
 }
 
 // Gives RUN instruction for the values read from yaml.
@@ -96,7 +96,7 @@ func (runObj runCommand) WriteInstruction() string {
 
 // EXPOSE instruction.
 type serverPort struct {
-	Number string `yaml:"number"`
+	Number string
 }
 
 // Gives EXPOSE instruction for the values read from yaml.
@@ -107,7 +107,7 @@ func (portObj serverPort) WriteInstruction() string {
 
 // CMD instruction.
 type cmd struct {
-	Params []string `yaml:"params"`
+	Params []string
 }
 
 // Gives CMD instruction for the values read from yaml.
