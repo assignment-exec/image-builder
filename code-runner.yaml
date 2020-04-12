@@ -2,7 +2,6 @@ stages:
   serverConfig:
     - from:
         image: golang:latest
-        as: golang
     - env:
         GOMODULE: on
         GOFLAGS: -mod=vendor

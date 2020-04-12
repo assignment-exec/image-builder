@@ -18,12 +18,11 @@ type stage []instruction
 // Decodes the yaml data and gives the stage instance having all the dockerfile instructions.
 func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var data []interface{}
-	var result []instruction
 	err := unmarshal(&data)
 	if err != nil {
 		return err
 	}
-	*s = append(result, getInstructions(data)...)
+	*s = getInstructions(data)
 	return nil
 }
 
