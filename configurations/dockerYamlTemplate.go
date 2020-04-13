@@ -10,7 +10,7 @@ import (
 )
 
 type dockerfileDataYaml struct {
-	Stages map[string]stage `yaml:"stages"`
+	ServerConfig stage `yaml:"serverConfig"`
 }
 
 // Gives all the instructions after parsing them from yaml.
@@ -199,36 +199,17 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	return nil
 }
 
-// Verifies the kind of the yaml node and returns the list of stage names provided.
-func getStagesOrderFromYamlNode(node *yaml.Node) ([]string, error) {
-	var stages []string
+// Verifies the kind of the yaml node.
+func verifyStageYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
-		return nil, errors.New("yaml should contain a map that contains 'stages' key")
+		return errors.New("yaml should contain a map that contains a valid stage name key")
 	}
 
 	stagesKeyNode := node.Content[0]
 	if stagesKeyNode.Kind != yaml.ScalarNode {
-		return nil, errors.New("yaml should contain a 'stages' key")
+		return errors.New("yaml should contain a valid stage name key")
 	}
 
-	stagesMapNode := node.Content[1]
-	if stagesMapNode.Kind != yaml.MappingNode {
-		return nil, errors.New("yaml should contain a 'stages' map that has stage names as keys")
-	}
-
-	for i, stage := range stagesMapNode.Content {
-		if i%2 == 0 {
-			if stage.Kind != yaml.ScalarNode {
-				return nil, errors.New("yaml should contain stage keys in 'stages' map")
-			}
-			stages = append(stages, stage.Value)
-		} else {
-			if stage.Kind != yaml.SequenceNode {
-				return nil, errors.New("yaml should contain stage sequences in 'stages' map")
-			}
-		}
-	}
-
-	return stages, nil
+	return nil
 }

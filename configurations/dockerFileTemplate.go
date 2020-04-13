@@ -8,16 +8,16 @@ import (
 )
 
 type dockerfileTemplate struct {
-	Data *dockerfileData
+	Data stage
 }
 
 // Gives a new instance of dockerfile template.
-func newDockerfileTemplate(data *dockerfileData) *dockerfileTemplate {
+func newDockerfileTemplate(data stage) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
-// Unmarshal yaml file and gives an instance of dockerfileData.
-func newDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
+// Unmarshal yaml file and gives an instance of stage.
+func newDockerFileDataFromYamlFile(filename string) (stage, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
@@ -25,40 +25,37 @@ func newDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 
-	stages, err := getStagesDataFromNode(node.Content[0])
+	stageData, err := getStagesDataFromNode(node.Content[0])
 	if err != nil {
 		return nil, fmt.Errorf("can't extract Stages from node: %v", err)
 	}
-
-	return &dockerfileData{Stages: stages}, nil
+	return stageData, nil
 }
 
-// Gives all the stages and their corresponding data provided in yaml.
-func getStagesDataFromNode(node *yaml.Node) ([]stage, error) {
+// Returns the stage instructions provided in yaml.
+func getStagesDataFromNode(node *yaml.Node) (stage, error) {
 	var data dockerfileDataYaml
 
-	stagesInOrder, err := getStagesOrderFromYamlNode(node)
+	err := verifyStageYamlNode(node)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 	if err := node.Decode(&data); err != nil {
 		return nil, err
 	}
-	var stages []stage
-	for _, stageName := range stagesInOrder {
-		stages = append(stages, data.Stages[stageName])
-	}
-	return stages, nil
+	var stageData stage
+
+	stageData = data.ServerConfig
+	return stageData, nil
 }
 
 // Generates a new template and writes it to the Dockerfile.
 func (d *dockerfileTemplate) generateDockerfileFromTemplate(writer io.Writer) error {
-	templateString := "{{- range .Stages -}}" +
+	templateString :=
 		"{{- range $i, $instruction := . }}" +
-		"{{- if gt $i 0 }}\n{{ end }}" +
-		"{{ $instruction.WriteInstruction }}\n" +
-		"{{- end }}\n\n" +
-		"{{ end }}"
+			"{{- if gt $i 0 }}\n{{ end }}" +
+			"{{ $instruction.WriteInstruction }}\n" +
+			"{{- end }}\n\n"
 
 	tmpl, err := template.New("dockerfile.template").Parse(templateString)
 	if err != nil {

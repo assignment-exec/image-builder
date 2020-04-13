@@ -9,10 +9,6 @@ type instruction interface {
 	WriteInstruction() string
 }
 
-type dockerfileData struct {
-	Stages []stage
-}
-
 type stage []instruction
 
 // Decodes the yaml data and gives the stage instance having all the dockerfile instructions.
