@@ -13,6 +13,9 @@ build:
 test:
 	$(GOTEST) ./...
 
+test-verbose:
+	$(GOTEST) -v ./...
+
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY)

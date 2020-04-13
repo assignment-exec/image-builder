@@ -26,5 +26,5 @@ jobs:
       run: make
       
     - name: Test Image Builder
-      run: go test ./...
+      run: make test-verbose
       timeout-minutes: 2
