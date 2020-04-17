@@ -10,7 +10,7 @@ import (
 )
 
 type dockerfileDataYaml struct {
-	ServerConfig stage `yaml:"serverConfig"`
+	ServerConfig serverConfig `yaml:"serverConfig"`
 }
 
 // Gives all the instructions after parsing them from yaml.
@@ -52,8 +52,8 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 		return parseRun(v)
 	case "cmd":
 		return parseCmd(v)
-	case "serverport":
-		return parseServerPort(v)
+	case "port":
+		return parsePort(v)
 	case "copy":
 		return parseCopy(v)
 	}
@@ -133,10 +133,10 @@ func parseCmd(value map[string]interface{}) instruction {
 	return command
 }
 
-// Parses the serverPort instruction node and returns an instance of `serverPort`.
-func parseServerPort(value map[string]interface{}) instruction {
+// Parses the port instruction node and returns an instance of `port`.
+func parsePort(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
-	var serverPort serverPort
+	var serverPort port
 	if v["number"] != "" {
 		serverPort.Number = v["number"]
 	}
@@ -173,7 +173,7 @@ func parseFrom(value map[string]interface{}) from {
 	return from
 }
 
-// Parses the instruction nodes within every stage node.
+// Parses the instruction nodes within every serverConfig node.
 func parseInnerInstructions(in map[string]interface{}) instruction {
 	for key, value := range in {
 
@@ -203,12 +203,12 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 func verifyStageYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
-		return errors.New("yaml should contain a map that contains a valid stage name key")
+		return errors.New("yaml should contain a map that contains a valid serverConfig name key")
 	}
 
 	stagesKeyNode := node.Content[0]
 	if stagesKeyNode.Kind != yaml.ScalarNode {
-		return errors.New("yaml should contain a valid stage name key")
+		return errors.New("yaml should contain a valid serverConfig name key")
 	}
 
 	return nil

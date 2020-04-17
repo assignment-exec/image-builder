@@ -9,10 +9,10 @@ type instruction interface {
 	WriteInstruction() string
 }
 
-type stage []instruction
+type serverConfig []instruction
 
-// Decodes the yaml data and gives the stage instance having all the dockerfile instructions.
-func (s *stage) UnmarshalYAML(unmarshal func(interface{}) error) error {
+// Decodes the yaml data and gives the serverConfig instance having all the dockerfile instructions.
+func (s *serverConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var data []interface{}
 	err := unmarshal(&data)
 	if err != nil {
@@ -90,12 +90,12 @@ func (runObj runCommand) WriteInstruction() string {
 }
 
 // EXPOSE instruction.
-type serverPort struct {
+type port struct {
 	Number string
 }
 
 // Gives EXPOSE instruction for the values read from yaml.
-func (portObj serverPort) WriteInstruction() string {
+func (portObj port) WriteInstruction() string {
 	result := fmt.Sprintf("EXPOSE %s", portObj.Number)
 	return result
 }

@@ -8,16 +8,16 @@ import (
 )
 
 type dockerfileTemplate struct {
-	Data stage
+	Data serverConfig
 }
 
 // Gives a new instance of dockerfile template.
-func newDockerfileTemplate(data stage) *dockerfileTemplate {
+func newDockerfileTemplate(data serverConfig) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
-// Unmarshal yaml file and gives an instance of stage.
-func newDockerFileDataFromYamlFile(filename string) (stage, error) {
+// Unmarshal yaml file and gives an instance of serverConfig.
+func newDockerFileDataFromYamlFile(filename string) (serverConfig, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
@@ -32,8 +32,8 @@ func newDockerFileDataFromYamlFile(filename string) (stage, error) {
 	return stageData, nil
 }
 
-// Returns the stage instructions provided in yaml.
-func getStagesDataFromNode(node *yaml.Node) (stage, error) {
+// Returns the serverConfig instructions provided in yaml.
+func getStagesDataFromNode(node *yaml.Node) (serverConfig, error) {
 	var data dockerfileDataYaml
 
 	err := verifyStageYamlNode(node)
@@ -43,7 +43,7 @@ func getStagesDataFromNode(node *yaml.Node) (stage, error) {
 	if err := node.Decode(&data); err != nil {
 		return nil, err
 	}
-	var stageData stage
+	var stageData serverConfig
 
 	stageData = data.ServerConfig
 	return stageData, nil
