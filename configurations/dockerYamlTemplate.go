@@ -200,14 +200,14 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 }
 
 // Verifies the kind of the yaml node.
-func verifyStageYamlNode(node *yaml.Node) error {
+func verifyConfigYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
 		return errors.New("yaml should contain a map that contains a valid serverConfig name key")
 	}
 
-	stagesKeyNode := node.Content[0]
-	if stagesKeyNode.Kind != yaml.ScalarNode {
+	configKeyNode := node.Content[0]
+	if configKeyNode.Kind != yaml.ScalarNode {
 		return errors.New("yaml should contain a valid serverConfig name key")
 	}
 

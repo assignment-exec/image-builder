@@ -25,28 +25,28 @@ func newDockerFileDataFromYamlFile(filename string) (serverConfig, error) {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 
-	stageData, err := getStagesDataFromNode(node.Content[0])
+	serverConfigData, err := getConfigsDataFromNode(node.Content[0])
 	if err != nil {
-		return nil, fmt.Errorf("can't extract Stages from node: %v", err)
+		return nil, fmt.Errorf("can't extract server config from node: %v", err)
 	}
-	return stageData, nil
+	return serverConfigData, nil
 }
 
 // Returns the serverConfig instructions provided in yaml.
-func getStagesDataFromNode(node *yaml.Node) (serverConfig, error) {
+func getConfigsDataFromNode(node *yaml.Node) (serverConfig, error) {
 	var data dockerfileDataYaml
 
-	err := verifyStageYamlNode(node)
+	err := verifyConfigYamlNode(node)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 	if err := node.Decode(&data); err != nil {
 		return nil, err
 	}
-	var stageData serverConfig
+	var serverConfigData serverConfig
 
-	stageData = data.ServerConfig
-	return stageData, nil
+	serverConfigData = data.ServerConfig
+	return serverConfigData, nil
 }
 
 // Generates a new template and writes it to the Dockerfile.
