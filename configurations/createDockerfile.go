@@ -1,6 +1,7 @@
 package configurations
 
 import (
+	"assignment-exec/image-builder/constants"
 	"log"
 	"os"
 )
@@ -14,7 +15,7 @@ func WriteDockerfile() error {
 
 	tmpl := newDockerfileTemplate(data)
 
-	file, err := os.Create("Dockerfile")
+	file, err := os.Create(constants.DockerFilepath)
 	defer func() {
 		err = file.Close()
 		if err != nil {
