@@ -8,13 +8,13 @@ import (
 
 var expectedGenericOutput = `FROM golang:latest
 
-ENV GOFLAGS=-mod=vendor
 ENV GOMODULE=on
+ENV GOFLAGS=-mod=vendor
 COPY . /code-runner
 WORKDIR /code-runner
-RUN go build -o code-runner-server
+RUN git clone https://github.com/assignment-exec/code-runner.git && cd code-runner && make
 EXPOSE 8082
-CMD ["./code-runner-server"]
+CMD ["./code-runner/code-runner-server", "-port", "8082"]
 
 `
 

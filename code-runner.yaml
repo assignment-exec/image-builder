@@ -10,9 +10,13 @@ serverConfig:
   - workdir:
       dir: /code-runner
   - runCommand:
-      param: go build -o code-runner-server
+      param: git clone https://github.com/assignment-exec/code-runner.git
+        && cd code-runner
+        && make
   - port:
       number: 8082
   - cmd:
       params:
-        - ./code-runner-server
+        - ./code-runner/code-runner-server
+        - -port
+        - 8082
