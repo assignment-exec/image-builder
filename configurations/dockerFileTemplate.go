@@ -8,16 +8,16 @@ import (
 )
 
 type dockerfileTemplate struct {
-	Data *dockerfileData
+	Data serverConfig
 }
 
 // Gives a new instance of dockerfile template.
-func newDockerfileTemplate(data *dockerfileData) *dockerfileTemplate {
+func newDockerfileTemplate(data serverConfig) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
-// Unmarshal yaml file and gives an instance of dockerfileData.
-func newDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
+// Unmarshal yaml file and gives an instance of serverConfig.
+func newDockerFileDataFromYamlFile(filename string) (serverConfig, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
@@ -25,40 +25,37 @@ func newDockerFileDataFromYamlFile(filename string) (*dockerfileData, error) {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 
-	stages, err := getStagesDataFromNode(node.Content[0])
+	serverConfigData, err := getConfigsDataFromNode(node.Content[0])
 	if err != nil {
-		return nil, fmt.Errorf("can't extract Stages from node: %v", err)
+		return nil, fmt.Errorf("can't extract server config from node: %v", err)
 	}
-
-	return &dockerfileData{Stages: stages}, nil
+	return serverConfigData, nil
 }
 
-// Gives all the stages and their corresponding data provided in yaml.
-func getStagesDataFromNode(node *yaml.Node) ([]stage, error) {
+// Returns the serverConfig instructions provided in yaml.
+func getConfigsDataFromNode(node *yaml.Node) (serverConfig, error) {
 	var data dockerfileDataYaml
 
-	stagesInOrder, err := getStagesOrderFromYamlNode(node)
+	err := verifyConfigYamlNode(node)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 	if err := node.Decode(&data); err != nil {
 		return nil, err
 	}
-	var stages []stage
-	for _, stageName := range stagesInOrder {
-		stages = append(stages, data.Stages[stageName])
-	}
-	return stages, nil
+	var serverConfigData serverConfig
+
+	serverConfigData = data.ServerConfig
+	return serverConfigData, nil
 }
 
 // Generates a new template and writes it to the Dockerfile.
 func (d *dockerfileTemplate) generateDockerfileFromTemplate(writer io.Writer) error {
-	templateString := "{{- range .Stages -}}" +
+	templateString :=
 		"{{- range $i, $instruction := . }}" +
-		"{{- if gt $i 0 }}\n{{ end }}" +
-		"{{ $instruction.WriteInstruction }}\n" +
-		"{{- end }}\n\n" +
-		"{{ end }}"
+			"{{- if gt $i 0 }}\n{{ end }}" +
+			"{{ $instruction.WriteInstruction }}\n" +
+			"{{- end }}\n\n"
 
 	tmpl, err := template.New("dockerfile.template").Parse(templateString)
 	if err != nil {

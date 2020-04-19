@@ -10,7 +10,7 @@ import (
 )
 
 type dockerfileDataYaml struct {
-	Stages map[string]stage `yaml:"stages"`
+	ServerConfig serverConfig `yaml:"serverConfig"`
 }
 
 // Gives all the instructions after parsing them from yaml.
@@ -52,8 +52,8 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 		return parseRun(v)
 	case "cmd":
 		return parseCmd(v)
-	case "serverport":
-		return parseServerPort(v)
+	case "port":
+		return parsePort(v)
 	case "copy":
 		return parseCopy(v)
 	}
@@ -133,10 +133,10 @@ func parseCmd(value map[string]interface{}) instruction {
 	return command
 }
 
-// Parses the serverPort instruction node and returns an instance of `serverPort`.
-func parseServerPort(value map[string]interface{}) instruction {
+// Parses the port instruction node and returns an instance of `port`.
+func parsePort(value map[string]interface{}) instruction {
 	v := convertMapToMap(value)
-	var serverPort serverPort
+	var serverPort port
 	if v["number"] != "" {
 		serverPort.Number = v["number"]
 	}
@@ -173,7 +173,7 @@ func parseFrom(value map[string]interface{}) from {
 	return from
 }
 
-// Parses the instruction nodes within every stage node.
+// Parses the instruction nodes within every serverConfig node.
 func parseInnerInstructions(in map[string]interface{}) instruction {
 	for key, value := range in {
 
@@ -199,36 +199,17 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	return nil
 }
 
-// Verifies the kind of the yaml node and returns the list of stage names provided.
-func getStagesOrderFromYamlNode(node *yaml.Node) ([]string, error) {
-	var stages []string
+// Verifies the kind of the yaml node.
+func verifyConfigYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
-		return nil, errors.New("yaml should contain a map that contains 'stages' key")
+		return errors.New("yaml should contain a map that contains a valid serverConfig name key")
 	}
 
-	stagesKeyNode := node.Content[0]
-	if stagesKeyNode.Kind != yaml.ScalarNode {
-		return nil, errors.New("yaml should contain a 'stages' key")
+	configKeyNode := node.Content[0]
+	if configKeyNode.Kind != yaml.ScalarNode {
+		return errors.New("yaml should contain a valid serverConfig name key")
 	}
 
-	stagesMapNode := node.Content[1]
-	if stagesMapNode.Kind != yaml.MappingNode {
-		return nil, errors.New("yaml should contain a 'stages' map that has stage names as keys")
-	}
-
-	for i, stage := range stagesMapNode.Content {
-		if i%2 == 0 {
-			if stage.Kind != yaml.ScalarNode {
-				return nil, errors.New("yaml should contain stage keys in 'stages' map")
-			}
-			stages = append(stages, stage.Value)
-		} else {
-			if stage.Kind != yaml.SequenceNode {
-				return nil, errors.New("yaml should contain stage sequences in 'stages' map")
-			}
-		}
-	}
-
-	return stages, nil
+	return nil
 }
