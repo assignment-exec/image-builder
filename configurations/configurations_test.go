@@ -8,8 +8,8 @@ import (
 
 var expectedGenericOutput = `FROM golang:latest
 
-ENV GOMODULE=on
 ENV GOFLAGS=-mod=vendor
+ENV GOMODULE=on
 COPY . /code-runner
 WORKDIR /code-runner
 RUN go build -o code-runner-server
