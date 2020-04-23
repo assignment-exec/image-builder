@@ -2,19 +2,19 @@ package builder
 
 import (
 	"archive/tar"
+	"assignment-exec/image-builder/constants"
 	"bytes"
 	"context"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
-
-	"github.com/docker/docker/client"
 )
 
 // Builds Docker Image for Code Runner.
-func BuildCodeRunnerImage() error {
+func BuildImage() error {
 
 	buildContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -33,10 +33,10 @@ func BuildCodeRunnerImage() error {
 		}
 	}()
 
-	dockerFilepath := "Dockerfile"
+	dockerFilepath := constants.DockerFilepath
 	dockerFileReader, err := os.Open(dockerFilepath)
 	if err != nil {
-		log.Fatalf(" unable to open dockerfile: %v",err)
+		log.Fatalf(" unable to open dockerfile: %v", err)
 	}
 	readDockerFile, err := ioutil.ReadAll(dockerFileReader)
 	if err != nil {
@@ -53,17 +53,17 @@ func BuildCodeRunnerImage() error {
 	}
 	_, err = writer.Write(readDockerFile)
 	if err != nil {
-		log.Fatalf("unable to write tar body: %v", err)
+		log.Fatalf("unable to write dockerfile into tar body: %v", err)
 	}
 
-	// Use the tar as build context while building image.
+	// Use the tar of the Dockerfile while building image.
 	dockerFileTarReader := bytes.NewReader(tarBuffer.Bytes())
 
 	response, err := dockerClient.ImageBuild(
 		buildContext,
 		dockerFileTarReader,
-		types.ImageBuildOptions{
-			Dockerfile: dockerFilepath})
+		types.ImageBuildOptions{Dockerfile: dockerFilepath})
+
 	if err != nil {
 		log.Fatalf("unable to build docker image: %v", err)
 	}
@@ -78,5 +78,6 @@ func BuildCodeRunnerImage() error {
 	if err != nil {
 		log.Fatalf("unable to read image build response: %v", err)
 	}
-	return  err
+
+	return err
 }

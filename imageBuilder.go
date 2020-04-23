@@ -15,7 +15,7 @@ func main() {
 		log.Fatalf("error while writing dockerfile: %v", err)
 	}
 
-	err = builder.BuildCodeRunnerImage()
+	err = builder.BuildImage()
 	if err != nil {
 		log.Fatalf("error while building image for code runner: %v", err)
 	}
