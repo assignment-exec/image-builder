@@ -17,4 +17,6 @@ serverConfig:
       number: 8082
   - cmd:
       params:
-        - ./code-runner/code-runner-server -port 8082
+        - ./code-runner/code-runner-server
+        - -port
+        - 8082
