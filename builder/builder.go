@@ -19,10 +19,10 @@ import (
 )
 
 type dockerAuthData struct {
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Repository string `yaml:"repository"`
-	Version string `yaml:"version"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	Repository     string `yaml:"repository"`
+	Version        string `yaml:"version"`
 	DockerfilePath string `yaml:"dockerfilePath"`
 }
 
@@ -66,7 +66,7 @@ func BuildImage(authData dockerAuthData) error {
 	dockerFilepath := constants.DockerFilepath
 	dockerFileReader, err := os.Open(dockerFilepath)
 	if err != nil {
-		log.Fatalf(" unable to open dockerfile: %v",err)
+		log.Fatalf(" unable to open dockerfile: %v", err)
 	}
 	readDockerFile, err := ioutil.ReadAll(dockerFileReader)
 	if err != nil {
@@ -94,7 +94,7 @@ func BuildImage(authData dockerAuthData) error {
 		dockerFileTarReader,
 		types.ImageBuildOptions{
 			Dockerfile: dockerFilepath,
-			Tags: []string {fmt.Sprintf("%s/%s:%s",authData.Username, authData.Repository,authData.Version)}})
+			Tags:       []string{fmt.Sprintf("%s/%s:%s", authData.Username, authData.Repository, authData.Version)}})
 	if err != nil {
 		log.Fatalf("unable to build docker image: %v", err)
 	}
@@ -110,7 +110,7 @@ func BuildImage(authData dockerAuthData) error {
 		log.Fatalf("unable to read image build response: %v", err)
 	}
 
-	return  err
+	return err
 }
 
 func PushImageToHub(authData dockerAuthData) error {
@@ -136,7 +136,7 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("docker.io/%s/%s:%s",authData.Username, authData.Repository,authData.Version)
+	imageString := fmt.Sprintf("docker.io/%s/%s:%s", authData.Username, authData.Repository, authData.Version)
 	resp, err := cli.ImagePush(buildContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,
 	})
@@ -158,4 +158,3 @@ func PushImageToHub(authData dockerAuthData) error {
 	return err
 
 }
-
