@@ -34,4 +34,10 @@ serverConfig:
 - Professor provides assignment specific configurations for creating suitable docker environment.
 - These configurations include specifying operating system and its version, compiler and commands required to run the specific assignment.
 
+## Build Image
+- Code Runner configurations are used to build a docker image locally.
+- Prerequisite for building an image is that docker engine should be installed.
+### Docker Setup
+See [instructions](https://docs.docker.com/engine/installation/) for installing docker engine on different supported platforms.
+
 
