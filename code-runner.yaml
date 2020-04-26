@@ -1,4 +1,4 @@
-serverConfig:
+config:
   - from:
       image: golang:latest
   - env:

@@ -7,8 +7,8 @@ import (
 )
 
 // Creates a template and writes it to a new Dockerfile.
-func WriteDockerfile() error {
-	data, err := newDockerFileDataFromYamlFile("code-runner.yaml")
+func WriteDockerfile(configYamlFilename string) error {
+	data, err := newDockerFileDataFromYamlFile(configYamlFilename)
 	if err != nil {
 		return err
 	}

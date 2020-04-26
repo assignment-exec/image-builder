@@ -7,10 +7,9 @@ import (
 )
 
 func main() {
-	log.Println("Creating Dockerfile...")
 
 	// Unmarshal the yaml configuration file and generate a dockerfile.
-	err := configurations.WriteDockerfile()
+	err := configurations.WriteDockerfile("code-runner.yaml")
 	if err != nil {
 		log.Fatalf("error while writing dockerfile: %v", err)
 	}
@@ -28,5 +27,10 @@ func main() {
 	err = builder.PushImageToHub(*authData)
 	if err != nil {
 		log.Fatalf("error while building image for code runner: %v", err)
+	}
+
+	err = configurations.WriteDockerfile("assignment-env.yaml")
+	if err != nil {
+		log.Fatalf("error while writing dockerfile: %v", err)
 	}
 }
