@@ -1,6 +1,7 @@
 package configurations
 
 import (
+	"assignment-exec/image-builder/constants"
 	"fmt"
 	"strings"
 )
@@ -9,10 +10,10 @@ type instruction interface {
 	WriteInstruction() string
 }
 
-type serverConfig []instruction
+type config []instruction
 
-// Decodes the yaml data and gives the serverConfig instance having all the dockerfile instructions.
-func (s *serverConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+// Decodes the yaml data and gives the config instance having all the dockerfile instructions.
+func (s *config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var data []interface{}
 	err := unmarshal(&data)
 	if err != nil {
@@ -115,5 +116,17 @@ func (cmdObj cmd) WriteInstruction() string {
 	paramsString := strings.Join(params, ", ")
 	execFormString := fmt.Sprintf("[%s]", paramsString)
 	result := fmt.Sprintf("CMD %s", execFormString)
+	return result
+}
+
+// Compiler installation instruction.
+type compiler struct {
+	Name    string
+	Version string
+}
+
+// Gives RUN instruction for installing the specified compiler.
+func (compilerObj compiler) WriteInstruction() string {
+	result := fmt.Sprintf("RUN %s && %s %s-%s", constants.UpdateCmd, constants.InstallationCmd, compilerObj.Name, compilerObj.Version)
 	return result
 }

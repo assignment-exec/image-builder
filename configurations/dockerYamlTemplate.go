@@ -10,7 +10,7 @@ import (
 )
 
 type dockerfileDataYaml struct {
-	ServerConfig serverConfig `yaml:"serverConfig"`
+	Config config `yaml:"config"`
 }
 
 // Gives all the instructions after parsing them from yaml.
@@ -56,6 +56,8 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 		return parsePort(v)
 	case "copy":
 		return parseCopy(v)
+	case "compiler":
+		return parseCompiler(v)
 	}
 	log.Fatal("unknown instruction in yaml")
 	return nil
@@ -89,6 +91,16 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	}
 
 	return mapString
+}
+
+// Parses the compiler instruction from yaml and returns an instance of `compiler`.
+func parseCompiler(data map[string]interface{}) instruction {
+	convertedData := convertMapToMap(data)
+	var compilerObj compiler
+	compilerObj.Name = convertedData["name"]
+	compilerObj.Version = convertedData["version"]
+
+	return compilerObj
 }
 
 // Parses the env instruction node from yaml and returns an instance of `env`.
@@ -173,7 +185,7 @@ func parseFrom(value map[string]interface{}) from {
 	return from
 }
 
-// Parses the instruction nodes within every serverConfig node.
+// Parses the instruction nodes within every config node.
 func parseInnerInstructions(in map[string]interface{}) instruction {
 	for key, value := range in {
 
@@ -203,12 +215,12 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 func verifyConfigYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
-		return errors.New("yaml should contain a map that contains a valid serverConfig name key")
+		return errors.New("yaml should contain a map that contains a valid config name key")
 	}
 
 	configKeyNode := node.Content[0]
 	if configKeyNode.Kind != yaml.ScalarNode {
-		return errors.New("yaml should contain a valid serverConfig name key")
+		return errors.New("yaml should contain a valid config name key")
 	}
 
 	return nil

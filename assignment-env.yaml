@@ -1,0 +1,6 @@
+config:
+  - from:
+      image: assignmentexec/trial2:2.0
+  - compiler:
+      name: gcc
+      version: 7

@@ -8,16 +8,16 @@ import (
 )
 
 type dockerfileTemplate struct {
-	Data serverConfig
+	Data config
 }
 
 // Gives a new instance of dockerfile template.
-func newDockerfileTemplate(data serverConfig) *dockerfileTemplate {
+func newDockerfileTemplate(data config) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
-// Unmarshal yaml file and gives an instance of serverConfig.
-func newDockerFileDataFromYamlFile(filename string) (serverConfig, error) {
+// Unmarshal yaml file and gives an instance of config.
+func newDockerFileDataFromYamlFile(filename string) (config, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
@@ -25,15 +25,15 @@ func newDockerFileDataFromYamlFile(filename string) (serverConfig, error) {
 		return nil, fmt.Errorf("unmarshal: %v", err)
 	}
 
-	serverConfigData, err := getConfigsDataFromNode(node.Content[0])
+	configData, err := getConfigsDataFromNode(node.Content[0])
 	if err != nil {
-		return nil, fmt.Errorf("can't extract server config from node: %v", err)
+		return nil, fmt.Errorf("can't extract config from node: %v", err)
 	}
-	return serverConfigData, nil
+	return configData, nil
 }
 
-// Returns the serverConfig instructions provided in yaml.
-func getConfigsDataFromNode(node *yaml.Node) (serverConfig, error) {
+// Returns the config instructions provided in yaml.
+func getConfigsDataFromNode(node *yaml.Node) (config, error) {
 	var data dockerfileDataYaml
 
 	err := verifyConfigYamlNode(node)
@@ -43,10 +43,10 @@ func getConfigsDataFromNode(node *yaml.Node) (serverConfig, error) {
 	if err := node.Decode(&data); err != nil {
 		return nil, err
 	}
-	var serverConfigData serverConfig
+	var configData config
 
-	serverConfigData = data.ServerConfig
-	return serverConfigData, nil
+	configData = data.Config
+	return configData, nil
 }
 
 // Generates a new template and writes it to the Dockerfile.
