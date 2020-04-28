@@ -18,23 +18,24 @@ import (
 	"os"
 )
 
-type dockerAuthData struct {
-	Username       string `yaml:"username"`
-	Password       string `yaml:"password"`
-	Repository     string `yaml:"repository"`
-	Version        string `yaml:"version"`
-	DockerfilePath string `yaml:"dockerfilePath"`
+type DockerAuthData struct {
+	Username             string `yaml:"username"`
+	Password             string `yaml:"password"`
+	ServerImage          string `yaml:"serverImage"`
+	ServerVersion        string `yaml:"serverVersion"`
+	AssignmentEnvImage   string `yaml:"assignmentEnvImage"`
+	AssignmentEnvVersion string `yaml:"assignmentEnvVersion"`
 }
 
 // Get the docker authentication details.
-func GetAuthData(filename string) (*dockerAuthData, error) {
+func GetAuthData(filename string) (*DockerAuthData, error) {
 
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read log config file")
 	}
 
-	c := &dockerAuthData{}
+	c := &DockerAuthData{}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
 		log.Fatalf("Error in unmarshalling yaml: %v", err)
@@ -44,7 +45,7 @@ func GetAuthData(filename string) (*dockerAuthData, error) {
 }
 
 // Builds Docker Image for Code Runner.
-func BuildImage(authData dockerAuthData) error {
+func BuildImage(authData DockerAuthData, assignmentEnv bool) error {
 
 	buildContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -86,6 +87,14 @@ func BuildImage(authData dockerAuthData) error {
 		log.Fatalf("unable to write tar body: %v", err)
 	}
 
+	var tagName string
+	if assignmentEnv {
+		tagName = fmt.Sprintf("%s:%s", authData.AssignmentEnvImage, authData.AssignmentEnvVersion)
+	} else {
+		tagName = fmt.Sprintf("%s/%s:%s", authData.Username, authData.ServerImage, authData.ServerVersion)
+	}
+
+	fmt.Println(tagName)
 	// Use the tar of the Dockerfile while building image.
 	dockerFileTarReader := bytes.NewReader(tarBuffer.Bytes())
 
@@ -94,7 +103,7 @@ func BuildImage(authData dockerAuthData) error {
 		dockerFileTarReader,
 		types.ImageBuildOptions{
 			Dockerfile: dockerFilepath,
-			Tags:       []string{fmt.Sprintf("%s/%s:%s", authData.Username, authData.Repository, authData.Version)}})
+			Tags:       []string{tagName}})
 	if err != nil {
 		log.Fatalf("unable to build docker image: %v", err)
 	}
@@ -113,7 +122,7 @@ func BuildImage(authData dockerAuthData) error {
 	return err
 }
 
-func PushImageToHub(authData dockerAuthData) error {
+func PushImageToHub(authData DockerAuthData) error {
 
 	// TODO: setup ssh keys for logging into docker hub
 
@@ -136,7 +145,7 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("docker.io/%s/%s:%s", authData.Username, authData.Repository, authData.Version)
+	imageString := fmt.Sprintf("docker.io/%s/%s:%s", authData.Username, authData.ServerImage, authData.ServerVersion)
 	resp, err := cli.ImagePush(buildContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,
 	})

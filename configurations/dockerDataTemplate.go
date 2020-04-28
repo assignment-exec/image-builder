@@ -127,6 +127,6 @@ type compiler struct {
 
 // Gives RUN instruction for installing the specified compiler.
 func (compilerObj compiler) WriteInstruction() string {
-	result := fmt.Sprintf("RUN %s && %s %s", constants.UpdateCmd, constants.InstallationCmd, compilerObj.Name)
+	result := fmt.Sprintf("RUN %s && %s %s-%s", constants.UpdateCmd, constants.InstallationCmd, compilerObj.Name, compilerObj.Version)
 	return result
 }

@@ -3,4 +3,4 @@ config:
       image: assignmentexec/trial2:2.0
   - compiler:
       name: gcc
-      version: 7.5
+      version: 7
