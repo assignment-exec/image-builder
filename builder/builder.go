@@ -2,7 +2,7 @@ package builder
 
 import (
 	"archive/tar"
-	"assignment-exec/image-builder/constants"
+	"assignment-exec/image-builder/environment"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -19,11 +19,10 @@ import (
 )
 
 type dockerAuthData struct {
-	Username       string `yaml:"username"`
-	Password       string `yaml:"password"`
-	Repository     string `yaml:"repository"`
-	Version        string `yaml:"version"`
-	DockerfilePath string `yaml:"dockerfilePath"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	Repository string `yaml:"repository"`
+	Version    string `yaml:"version"`
 }
 
 // Get the docker authentication details.
@@ -37,7 +36,7 @@ func GetAuthData(filename string) (*dockerAuthData, error) {
 	c := &dockerAuthData{}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
-		log.Fatalf("Error in unmarshalling yaml: %v", err)
+		log.Fatalf("error in unmarshalling yaml: %v", err)
 	}
 
 	return c, nil
@@ -63,7 +62,7 @@ func BuildImage(authData dockerAuthData) error {
 		}
 	}()
 
-	dockerFilepath := constants.DockerFilepath
+	dockerFilepath := environment.DockerFilepath
 	dockerFileReader, err := os.Open(dockerFilepath)
 	if err != nil {
 		log.Fatalf(" unable to open dockerfile: %v", err)
@@ -117,8 +116,6 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	// TODO: setup ssh keys for logging into docker hub
 
-	// TODO: Handle the errors appropriately ans return
-
 	buildContext := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -136,12 +133,12 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("docker.io/%s/%s:%s", authData.Username, authData.Repository, authData.Version)
+	imageString := fmt.Sprintf("%s/%s/%s:%s", environment.DockerIOPath, authData.Username, authData.Repository, authData.Version)
 	resp, err := cli.ImagePush(buildContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,
 	})
 	if err != nil {
-		panic(err)
+		log.Fatalf("unable to push the code runner image to hub: %v", err)
 	}
 	_, err = io.Copy(os.Stdout, resp)
 	if err != nil {

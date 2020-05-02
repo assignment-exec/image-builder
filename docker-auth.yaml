@@ -1,5 +1,4 @@
 username: assignmentexec
 password: AssignmentExec@2020
-repository: trial2
-version: 2.5
-dockerfilePath: Dockerfile
+repository: code-runner
+version: 1.0

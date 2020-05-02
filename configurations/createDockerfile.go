@@ -1,21 +1,21 @@
 package configurations
 
 import (
-	"assignment-exec/image-builder/constants"
+	"assignment-exec/image-builder/environment"
 	"log"
 	"os"
 )
 
 // Creates a template and writes it to a new Dockerfile.
 func WriteDockerfile() error {
-	data, err := newDockerFileDataFromYamlFile("code-runner.yaml")
+	data, err := newDockerFileDataFromYamlFile(environment.CodeRunnerYaml)
 	if err != nil {
 		return err
 	}
 
 	tmpl := newDockerfileTemplate(data)
 
-	file, err := os.Create(constants.DockerFilepath)
+	file, err := os.Create(environment.DockerFilepath)
 	defer func() {
 		err = file.Close()
 		if err != nil {
