@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error while pushing image to hub: %v", err)
 	}
-
+	
 	if *pushImage {
 		err = builder.PushImageToHub(*authData)
 		if err != nil {
