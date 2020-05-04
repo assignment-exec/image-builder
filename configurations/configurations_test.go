@@ -7,6 +7,7 @@ import (
 )
 
 var expectedGenericOutput = `FROM golang:latest
+
 ENV GOMODULE=on
 ENV GOFLAGS=-mod=vendor
 COPY . /code-runner
@@ -14,6 +15,7 @@ WORKDIR /code-runner
 RUN git clone https://github.com/assignment-exec/code-runner.git && cd code-runner && make
 EXPOSE 8082
 CMD ["./code-runner/code-runner-server", "-port", "8082"]
+
 `
 
 // Tests dockerfile template generation.
