@@ -3,6 +3,9 @@ package builder
 import (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0eef049661abf8aefcac2783673dba86eee154a9
 	"archive/tar"
 	"assignment-exec/image-builder/environment"
 	"bytes"
@@ -14,17 +17,23 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
+<<<<<<< HEAD
 =======
 	"archive/tar"
 	"bytes"
 	"context"
 	"github.com/docker/docker/api/types"
 >>>>>>> 41eb581... Usage of Docker client for building image
+=======
+>>>>>>> 0eef049661abf8aefcac2783673dba86eee154a9
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0eef049661abf8aefcac2783673dba86eee154a9
 )
 
 type dockerAuthData struct {
@@ -164,6 +173,7 @@ func PushImageToHub(authData dockerAuthData) error {
 	return err
 
 }
+<<<<<<< HEAD
 =======
 	"fmt"
 	"os/exec"
@@ -241,3 +251,5 @@ func BuildCodeRunnerImage() error {
 	return  err
 }
 >>>>>>> 9585f69... Initial code for building image
+=======
+>>>>>>> 0eef049661abf8aefcac2783673dba86eee154a9
