@@ -17,16 +17,6 @@ serverConfig:
       number: 8082
   - cmd:
       params:
-<<<<<<< HEAD
-<<<<<<< HEAD
         - ./code-runner/code-runner-server
         - -port
         - 8082
-=======
-        - ./code-runner/code-runner-server -port 8082
->>>>>>> 9585f69... Initial code for building image
-=======
-        - ./code-runner/code-runner-server
-        - -port
-        - 8082
->>>>>>> 0eef049661abf8aefcac2783673dba86eee154a9
