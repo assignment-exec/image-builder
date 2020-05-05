@@ -9,26 +9,24 @@ There are two types of configurations provided - Code runner and Assignment Envi
 - Code runner configurations are specified in yaml format and include instructions that are needed in Dockerfile for running the server.
 Following is a sample of the configuration yaml
 ```commandline
-stages:
-  serverConfig:
-    - from:
-        image: golang:latest
-        as: golang
-    - env:
-        GOMODULE: on
-        GOFLAGS: -mod=vendor
-    - copy:
-        basedir: .
-        destdir: /code-runner
-    - workdir:
-        dir: /code-runner
-    - runCommand:
-        param: make
-    - serverPort:
-        number: 8082
-    - cmd:
-        params:
-          - ./code-runner-server
+serverConfig:
+  - from:
+      image: golang:latest
+  - env:
+      GOMODULE: on
+      GOFLAGS: -mod=vendor
+  - copy:
+      basedir: .
+      destdir: /code-runner
+  - workdir:
+      dir: /code-runner
+  - runCommand:
+      param: go build -o code-runner-server
+  - port:
+      number: 8082
+  - cmd:
+      params:
+        - ./code-runner-server
 ```
 
 ### Assignment Environment Configurations
