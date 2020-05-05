@@ -62,7 +62,7 @@ func BuildImage(authData dockerAuthData) error {
 		}
 	}()
 
-	dockerFilepath := environment.DockerFilepath
+	dockerFilepath := os.Getenv(environment.DockerFilepath)
 	dockerFileReader, err := os.Open(dockerFilepath)
 	if err != nil {
 		log.Fatalf(" unable to open dockerfile: %v", err)
@@ -133,7 +133,7 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("%s/%s/%s:%s", environment.DockerIOPath, authData.Username, authData.Repository, authData.Version)
+	imageString := fmt.Sprintf("%s/%s/%s:%s", os.Getenv(environment.DockerIOPath), authData.Username, authData.Repository, authData.Version)
 
 	resp, err := cli.ImagePush(buildContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,

@@ -6,6 +6,7 @@ import (
 	"assignment-exec/image-builder/environment"
 	"flag"
 	"log"
+	"os"
 )
 
 var pushImage = flag.Bool("pushImage", false, "Push image to docker hub")
@@ -18,25 +19,45 @@ func main() {
 	flag.Parse()
 	log.Println("Creating Dockerfile...")
 
-	// Unmarshal the yaml configuration file and generate a dockerfile.
-	err := configurations.WriteDockerfile()
+	// Setting environment variables
+	err := os.Setenv("CODE_RUNNER_YAML","code-runner.yaml")
 	if err != nil {
-		log.Fatalf("error while writing dockerfile: %v", err)
+		log.Fatalf("error while setting environment variables: %v", err)
+		return
+	}
+	os.Setenv("DOCKER_AUTH_YAML", "docker-auth.yaml")
+	if err != nil {
+		log.Fatalf("error while setting environment variables: %v", err)
+		return
+	}
+	os.Setenv("DOCKERFILE_PATH", "Dockerfile")
+	if err != nil {
+		log.Fatalf("error while setting environment variables: %v", err)
+		return
+	}
+	os.Setenv("DOCKER_IO_PATH", "docker.io")
+	if err != nil {
+		log.Fatalf("error while setting environment variables: %v", err)
+		return
 	}
 
-	authData, err := builder.GetAuthData(environment.DockerAuthYaml)
+	// Unmarshal the yaml configuration file and generate a dockerfile.
+	err = configurations.WriteDockerfile()
+	if err != nil {
+		log.Fatalf("error while writing dockerfile: %v", err)
+		return
+	}
+
+	authData, err := builder.GetAuthData(os.Getenv(environment.DockerAuthYaml))
 	if err != nil {
 		log.Fatalf("error while reading authetication details: %v", err)
+		return
 	}
 
 	err = builder.BuildImage(*authData)
 	if err != nil {
 		log.Fatalf("error while building image for code runner: %v", err)
-	}
-
-	err = builder.PushImageToHub(*authData)
-	if err != nil {
-		log.Fatalf("error while pushing image to hub: %v", err)
+		return
 	}
 	
 	if *pushImage {

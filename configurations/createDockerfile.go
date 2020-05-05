@@ -8,14 +8,14 @@ import (
 
 // Creates a template and writes it to a new Dockerfile.
 func WriteDockerfile() error {
-	data, err := newDockerFileDataFromYamlFile(environment.CodeRunnerYaml)
+	data, err := newDockerFileDataFromYamlFile(os.Getenv(environment.CodeRunnerYaml))
 	if err != nil {
 		return err
 	}
 
 	tmpl := newDockerfileTemplate(data)
 
-	file, err := os.Create(environment.DockerFilepath)
+	file, err := os.Create(os.Getenv(environment.DockerFilepath))
 	defer func() {
 		err = file.Close()
 		if err != nil {
