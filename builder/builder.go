@@ -2,7 +2,6 @@ package builder
 
 import (
 	"archive/tar"
-	"assignment-exec/image-builder/environment"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -26,12 +25,15 @@ type dockerAuthData struct {
 }
 
 type ImageBuilder struct {
-	authData *dockerAuthData
+	authData       *dockerAuthData
+	dockerFilename string
 }
 
-func NewImageBuilder(filename string) *ImageBuilder {
-	dockerAuth, err := getAuthData(filename)
-	imgBuilder := &ImageBuilder{authData: dockerAuth}
+const dockerIO = "docker.io"
+
+func NewImageBuilder(dockerAuthConfig string, dockerFilename string) *ImageBuilder {
+	dockerAuth, err := getAuthData(dockerAuthConfig)
+	imgBuilder := &ImageBuilder{authData: dockerAuth, dockerFilename: dockerFilename}
 	if err != nil {
 		log.Fatalf("error in reading docker authentication data: %v", err)
 	}
@@ -75,7 +77,7 @@ func (imgBuilder ImageBuilder) BuildImage() error {
 		}
 	}()
 
-	dockerFilepath := os.Getenv(environment.DockerFilepath)
+	dockerFilepath := imgBuilder.dockerFilename
 	dockerFileReader, err := os.Open(dockerFilepath)
 	if err != nil {
 		log.Fatalf(" unable to open dockerfile: %v", err)
@@ -147,7 +149,7 @@ func (imgBuilder ImageBuilder) PublishImage() error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("%s/%s/%s:%s", os.Getenv(environment.DockerIOPath), imgBuilder.authData.Username,
+	imageString := fmt.Sprintf("%s/%s/%s:%s", dockerIO, imgBuilder.authData.Username,
 		imgBuilder.authData.Repository, imgBuilder.authData.Version)
 
 	resp, err := dockerClient.ImagePush(buildContext, imageString, types.ImagePushOptions{
