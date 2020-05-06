@@ -25,8 +25,21 @@ type dockerAuthData struct {
 	Version    string `yaml:"version"`
 }
 
+type ImageBuilder struct {
+	authData *dockerAuthData
+}
+
+func NewImageBuilder(filename string) *ImageBuilder {
+	dockerAuth, err := getAuthData(filename)
+	imgBuilder := &ImageBuilder{authData: dockerAuth}
+	if err != nil {
+		log.Fatalf("error in reading docker authentication data: %v", err)
+	}
+	return imgBuilder
+}
+
 // Get the docker authentication details.
-func GetAuthData(filename string) (*dockerAuthData, error) {
+func getAuthData(filename string) (*dockerAuthData, error) {
 
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -42,8 +55,8 @@ func GetAuthData(filename string) (*dockerAuthData, error) {
 	return c, nil
 }
 
-// Builds Docker Image for Code Runner.
-func BuildImage(authData dockerAuthData) error {
+// Build Docker Image.
+func (imgBuilder ImageBuilder) BuildImage() error {
 
 	buildContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -93,7 +106,8 @@ func BuildImage(authData dockerAuthData) error {
 		dockerFileTarReader,
 		types.ImageBuildOptions{
 			Dockerfile: dockerFilepath,
-			Tags:       []string{fmt.Sprintf("%s/%s:%s", authData.Username, authData.Repository, authData.Version)}})
+			Tags: []string{fmt.Sprintf("%s/%s:%s", imgBuilder.authData.Username,
+				imgBuilder.authData.Repository, imgBuilder.authData.Version)}})
 	if err != nil {
 		log.Fatalf("unable to build docker image: %v", err)
 	}
@@ -112,19 +126,19 @@ func BuildImage(authData dockerAuthData) error {
 	return err
 }
 
-func PushImageToHub(authData dockerAuthData) error {
+func (imgBuilder ImageBuilder) PublishImage() error {
 
 	// TODO: setup ssh keys for logging into docker hub
 
 	buildContext := context.Background()
-	cli, err := client.NewEnvClient()
+	dockerClient, err := client.NewEnvClient()
 	if err != nil {
 		return err
 	}
 
 	authConfig := types.AuthConfig{
-		Username: authData.Username,
-		Password: authData.Password,
+		Username: imgBuilder.authData.Username,
+		Password: imgBuilder.authData.Password,
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
@@ -133,9 +147,10 @@ func PushImageToHub(authData dockerAuthData) error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("%s/%s/%s:%s", os.Getenv(environment.DockerIOPath), authData.Username, authData.Repository, authData.Version)
+	imageString := fmt.Sprintf("%s/%s/%s:%s", os.Getenv(environment.DockerIOPath), imgBuilder.authData.Username,
+		imgBuilder.authData.Repository, imgBuilder.authData.Version)
 
-	resp, err := cli.ImagePush(buildContext, imageString, types.ImagePushOptions{
+	resp, err := dockerClient.ImagePush(buildContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,
 	})
 	if err != nil {
