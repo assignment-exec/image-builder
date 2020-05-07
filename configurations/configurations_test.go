@@ -15,12 +15,6 @@ WORKDIR /code-runner
 RUN git clone https://github.com/assignment-exec/code-runner.git && cd code-runner && make
 EXPOSE 8082
 CMD ["./code-runner/code-runner-server", "-port", "8082"]
-<<<<<<< HEAD
-
-`
-
-var expectedAssgnEnvOutput = `FROM assignmentexec/trial2:2.0
-RUN apt-get update && apt-get -y install gcc-7
 
 `
 
