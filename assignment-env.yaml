@@ -1,6 +1,6 @@
 config:
   - from:
-      image: assignmentexec/trial2:2.0
-  - compiler:
+      image: assignmentexec/code-runner:1.0
+  - programmingLanguage:
       name: gcc
       version: 7

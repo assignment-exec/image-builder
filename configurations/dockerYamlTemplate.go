@@ -56,8 +56,8 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 		return parsePort(v)
 	case "copy":
 		return parseCopy(v)
-	case "compiler":
-		return parseCompiler(v)
+	case "programminglanguage":
+		return parseProgrammingLanguage(v)
 	}
 	log.Fatal("unknown instruction in yaml")
 	return nil
@@ -93,14 +93,14 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	return mapString
 }
 
-// Parses the compiler instruction from yaml and returns an instance of `compiler`.
-func parseCompiler(data map[string]interface{}) instruction {
+// Parses the programmingLanguage instruction from yaml and returns an instance of `programmingLanguage`.
+func parseProgrammingLanguage(data map[string]interface{}) instruction {
 	convertedData := convertMapToMap(data)
-	var compilerObj compiler
-	compilerObj.Name = convertedData["name"]
-	compilerObj.Version = convertedData["version"]
+	var langObj programmingLanguage
+	langObj.Name = convertedData["name"]
+	langObj.Version = convertedData["version"]
 
-	return compilerObj
+	return langObj
 }
 
 // Parses the env instruction node from yaml and returns an instance of `env`.

@@ -2,5 +2,3 @@ username: assignmentexec
 password: AssignmentExec@2020
 repository: code-runner
 version: 1.0
-assignmentEnvImage: assignmentenv1
-assignmentEnvVersion: 2.0

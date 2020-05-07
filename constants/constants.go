@@ -1,4 +1,5 @@
 package constants
 
-const InstallationCmd = "apt-get -y install"
-const UpdateCmd = "apt-get update"
+const InstallationScriptsDir = "scripts"
+const DockerIO = "docker.io"
+const BuildContextTar = "buildContext.tar"

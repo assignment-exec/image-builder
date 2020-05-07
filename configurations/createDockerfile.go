@@ -1,15 +1,16 @@
 package configurations
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
 
 // Creates a template and writes it to a new Dockerfile.
-func WriteDockerfile(codeRunnerConfigFilename string, dockerFilename string) error {
-	data, err := newDockerFileDataFromYamlFile(codeRunnerConfigFilename)
+func WriteDockerfile(configFilename string, dockerFilename string) (error, string) {
+	data, err := newDockerFileDataFromYamlFile(configFilename)
 	if err != nil {
-		return err
+		return err, ""
 	}
 
 	tmpl := newDockerfileTemplate(data)
@@ -23,10 +24,19 @@ func WriteDockerfile(codeRunnerConfigFilename string, dockerFilename string) err
 		}
 	}()
 	if err != nil {
-		return err
+		return err, ""
 	}
 
 	err = tmpl.generateDockerfileFromTemplate(file)
 
-	return err
+	var languageImageFormat string
+	for _, inst := range tmpl.Data {
+		switch inst := inst.(type) {
+		case programmingLanguage:
+			languageImageFormat = fmt.Sprintf("%s%s", inst.Name, inst.Version)
+			break
+		}
+	}
+
+	return err, languageImageFormat
 }

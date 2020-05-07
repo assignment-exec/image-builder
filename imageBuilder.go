@@ -23,15 +23,16 @@ func main() {
 
 	err := generateCodeRunnerImage(imgBuilder)
 	if err == nil {
-		err = generateAssignmentEnvImage(imgBuilder)
+		_ = generateAssignmentEnvImage(imgBuilder)
 	}
+
 }
 
 // Generate a dockerfile for code runner server, build its image and push it ot docker hub.
 func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 
 	// Unmarshal the yaml configuration file and generate a dockerfileName.
-	err := configurations.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
+	err, _ := configurations.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
 	if err != nil {
 		log.Fatalf("error while writing dockerfileName: %v", err)
 		return err
@@ -55,12 +56,13 @@ func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 
 // Generate a dockerfile for assignment environment and build its image.
 func generateAssignmentEnvImage(imgBuilder *builder.ImageBuilder) error {
-	err := configurations.WriteDockerfile(*assignmentEnvConfig,*dockerfileName)
+	err, langImageFormat := configurations.WriteDockerfile(*assignmentEnvConfig, *dockerfileName)
 	if err != nil {
 		log.Fatalf("error while writing dockerfile for assignment environment: %v", err)
 		return err
 	}
 
+	imgBuilder.LanguageImageFormat = langImageFormat
 	err = imgBuilder.BuildImage(true)
 	if err != nil {
 		log.Fatalf("error while building image for assignment environment: %v", err)

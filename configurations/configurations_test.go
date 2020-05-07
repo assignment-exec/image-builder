@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var expectedCodeRunnerOutput = `FROM golang:latest
+var expectedCodeRunnerDockerfileContents = `FROM golang:latest
 
 ENV GOMODULE=on
 ENV GOFLAGS=-mod=vendor
@@ -18,7 +18,7 @@ CMD ["./code-runner/code-runner-server", "-port", "8082"]
 
 `
 
-var expectedAssgnEnvOutput = `FROM assignmentexec/trial2:2.0
+var expectedAssgnEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
 RUN apt-get update && apt-get -y install gcc-7
 
 `
@@ -33,7 +33,7 @@ func TestDockerfileTemplate(t *testing.T) {
 	err = tmpl.generateDockerfileFromTemplate(output)
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedCodeRunnerOutput, output.String())
+	assert.Equal(t, expectedCodeRunnerDockerfileContents, output.String())
 }
 
 func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
@@ -45,5 +45,5 @@ func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 	err = tmpl.generateDockerfileFromTemplate(output)
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedAssgnEnvOutput, output.String())
+	assert.Equal(t, expectedAssgnEnvDockerfileContents, output.String())
 }

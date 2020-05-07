@@ -3,6 +3,9 @@ package configurations
 import (
 	"assignment-exec/image-builder/constants"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -12,7 +15,7 @@ type instruction interface {
 
 type config []instruction
 
-// Decodes the yaml data and gives the config instance having all the dockerfile instructions.
+// UnmarshalYAML decodes the yaml configuration to obtain dockerfile instructions.
 func (s *config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var data []interface{}
 	err := unmarshal(&data)
@@ -119,14 +122,26 @@ func (cmdObj cmd) WriteInstruction() string {
 	return result
 }
 
-// Compiler installation instruction.
-type compiler struct {
+// Programming Language installation instruction.
+type programmingLanguage struct {
 	Name    string
 	Version string
 }
 
-// Gives RUN instruction for installing the specified compiler.
-func (compilerObj compiler) WriteInstruction() string {
-	result := fmt.Sprintf("RUN %s && %s %s-%s", constants.UpdateCmd, constants.InstallationCmd, compilerObj.Name, compilerObj.Version)
-	return result
+// Gives RUN instruction for installing the specified programmingLanguage.
+func (langObj programmingLanguage) WriteInstruction() string {
+
+	languageScriptName := fmt.Sprintf("%s_%s.sh", langObj.Name, langObj.Version)
+
+	// Check whether the given language and version is available in installation scripts.
+	currentDir, _ := os.Getwd()
+	scriptPath := filepath.Join(currentDir, constants.InstallationScriptsDir, languageScriptName)
+	_, err := os.Stat(scriptPath)
+	if err == nil {
+		result := fmt.Sprintf("RUN ./%s/%s ", constants.InstallationScriptsDir, languageScriptName)
+		return result
+	} else if os.IsNotExist(err) {
+		log.Fatalf("Installation scripts for given language and version doesn't exists")
+	}
+	return ""
 }
