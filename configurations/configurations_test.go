@@ -2,7 +2,9 @@ package configurations
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -19,7 +21,7 @@ CMD ["./code-runner/code-runner-server", "-port", "8082"]
 `
 
 var expectedAssgnEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
-RUN apt-get update && apt-get -y install gcc-7
+RUN ./scripts/gcc_7.sh 
 
 `
 
@@ -37,7 +39,10 @@ func TestDockerfileTemplate(t *testing.T) {
 }
 
 func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
-	data, err := newDockerFileDataFromYamlFile("../assignment-env.yaml")
+
+	os.Chdir("..")
+	fmt.Println(os.Getwd())
+	data, err := newDockerFileDataFromYamlFile("assignment-env.yaml")
 	tmpl := newDockerfileTemplate(data)
 	assert.NoError(t, err)
 
