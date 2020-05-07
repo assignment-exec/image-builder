@@ -1,6 +1,6 @@
 username: assignmentexec
 password: AssignmentExec@2020
-serverImage: trial2
-serverVersion: 2.5
+repository: code-runner
+version: 1.0
 assignmentEnvImage: assignmentenv1
 assignmentEnvVersion: 2.0
