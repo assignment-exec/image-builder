@@ -1,8 +1,8 @@
 package configurations
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
@@ -97,9 +97,16 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 func parseProgrammingLanguage(data map[string]interface{}) instruction {
 	convertedData := convertMapToMap(data)
 	var langObj programmingLanguage
-	langObj.Name = convertedData["name"]
-	langObj.Version = convertedData["version"]
+	if convertedData["name"] != "" {
+		langObj.Name = convertedData["name"]
+		if strings.Contains(langObj.Name, "+") {
+			langObj.Name = strings.ReplaceAll(langObj.Name, "+", "p")
+		}
+	}
 
+	if convertedData["version"] != "" {
+		langObj.Version = convertedData["version"]
+	}
 	return langObj
 }
 
@@ -202,11 +209,11 @@ func parseInnerInstructions(in map[string]interface{}) instruction {
 func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("error in reading yaml file: %v", err)
+		return errors.Wrap(err, "error in reading yaml")
 	}
 	err = yaml.Unmarshal(yamlFile, node)
 	if err != nil {
-		return fmt.Errorf("unmarshal: %v", err)
+		return errors.Wrap(err, "error in unmarshaling yaml")
 	}
 	return nil
 }

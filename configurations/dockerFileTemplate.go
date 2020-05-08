@@ -1,7 +1,7 @@
 package configurations
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 	"io"
 	"text/template"
@@ -12,22 +12,22 @@ type dockerfileTemplate struct {
 }
 
 // Gives a new instance of dockerfile template.
-func newDockerfileTemplate(data config) *dockerfileTemplate {
+func NewDockerfileTemplate(data config) *dockerfileTemplate {
 	return &dockerfileTemplate{Data: data}
 }
 
 // Unmarshal yaml file and gives an instance of config.
-func newDockerFileDataFromYamlFile(filename string) (config, error) {
+func NewDockerFileDataFromYamlFile(filename string) (config, error) {
 	node := yaml.Node{}
 
 	err := unmarshalYamlFile(filename, &node)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal: %v", err)
+		return nil, err
 	}
 
 	configData, err := getConfigsDataFromNode(node.Content[0])
 	if err != nil {
-		return nil, fmt.Errorf("can't extract config from node: %v", err)
+		return nil, err
 	}
 	return configData, nil
 }
@@ -38,10 +38,10 @@ func getConfigsDataFromNode(node *yaml.Node) (config, error) {
 
 	err := verifyConfigYamlNode(node)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal: %v", err)
+		return nil, err
 	}
 	if err := node.Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error in decoding yaml data")
 	}
 	var configData config
 
@@ -50,7 +50,7 @@ func getConfigsDataFromNode(node *yaml.Node) (config, error) {
 }
 
 // Generates a new template and writes it to the Dockerfile.
-func (d *dockerfileTemplate) generateDockerfileFromTemplate(writer io.Writer) error {
+func (d *dockerfileTemplate) GenerateDockerfileFromTemplate(writer io.Writer) error {
 	templateString :=
 		"{{- range $i, $instruction := . }}" +
 			"{{- if gt $i 0 }}\n{{ end }}" +
@@ -59,13 +59,24 @@ func (d *dockerfileTemplate) generateDockerfileFromTemplate(writer io.Writer) er
 
 	tmpl, err := template.New("dockerfile.template").Parse(templateString)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in parsing dockerfile template")
 	}
 
 	err = tmpl.Execute(writer, d.Data)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in executing the template")
 	}
 
 	return nil
+}
+
+func (d *dockerfileTemplate) GetLanguageFormat() (string, string) {
+	for _, inst := range d.Data {
+		switch inst := inst.(type) {
+		case programmingLanguage:
+			return inst.Name, inst.Version
+		}
+	}
+
+	return "", ""
 }

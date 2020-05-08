@@ -2,28 +2,31 @@ package main
 
 import (
 	"assignment-exec/image-builder/builder"
-	"assignment-exec/image-builder/configurations"
+	"assignment-exec/image-builder/utilities"
 	"flag"
+	"github.com/pkg/errors"
 	"log"
 )
 
 var publishImage = flag.Bool("publishImage", false, "Push image to docker hub")
 var codeRunnerConfig = flag.String("codeRunnerConfig", "code-runner.yaml", "Code Runner configuration filename")
-var assignmentEnvConfig = flag.String("assignmentEnvConfig", "assignment-env.yaml", "Assignment Environment configuration filename")
-var dockerAuthConfig = flag.String("dockerAuthConfig", "docker-auth.yaml", "Docker hub authentication configuration filename")
+var assignmentEnv = flag.String("assignmentEnv", "assignment-env.yaml", "Assignment Environment configuration filename")
 var dockerfileName = flag.String("dockerfile", "Dockerfile", "Dockerfile name")
 
 func main() {
 
 	flag.Parse()
 
-	log.Println("Creating Dockerfile...")
-
-	imgBuilder := builder.NewImageBuilder(*dockerAuthConfig, *dockerfileName)
+	imgBuilder := builder.NewImageBuilder(*dockerfileName)
 
 	err := generateCodeRunnerImage(imgBuilder)
-	if err == nil {
-		_ = generateAssignmentEnvImage(imgBuilder)
+	if err != nil {
+		log.Fatalf("error while building code runner image: %v", err)
+	}
+
+	err = generateAssignmentEnvImage(imgBuilder)
+	if err != nil {
+		log.Fatalf("error while building assignment environment image: %v", err)
 	}
 
 }
@@ -32,23 +35,20 @@ func main() {
 func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 
 	// Unmarshal the yaml configuration file and generate a dockerfileName.
-	err, _ := configurations.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
+	err, _, _ := utilities.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
 	if err != nil {
-		log.Fatalf("error while writing dockerfileName: %v", err)
-		return err
+		return errors.Wrap(err, "error in writing dockerfile for code runner")
 	}
 
 	err = imgBuilder.BuildImage(false)
 	if err != nil {
-		log.Fatalf("error while building image for code runner: %v", err)
 		return err
 	}
 
 	if *publishImage {
 		err = imgBuilder.PublishImage()
 		if err != nil {
-			log.Fatalf("error while pushing image to docker hub: %v", err)
-			return err
+			return errors.Wrap(err, "error in pushing code runner image")
 		}
 	}
 	return nil
@@ -56,16 +56,15 @@ func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 
 // Generate a dockerfile for assignment environment and build its image.
 func generateAssignmentEnvImage(imgBuilder *builder.ImageBuilder) error {
-	err, langImageFormat := configurations.WriteDockerfile(*assignmentEnvConfig, *dockerfileName)
+	err, language, version := utilities.WriteDockerfile(*assignmentEnv, *dockerfileName)
 	if err != nil {
-		log.Fatalf("error while writing dockerfile for assignment environment: %v", err)
-		return err
+		return errors.Wrap(err, "error in writing dockerfile for assignment environment")
 	}
 
-	imgBuilder.LanguageImageFormat = langImageFormat
+	imgBuilder.Language = language
+	imgBuilder.Version = version
 	err = imgBuilder.BuildImage(true)
 	if err != nil {
-		log.Fatalf("error while building image for assignment environment: %v", err)
 		return err
 	}
 

@@ -131,14 +131,14 @@ type programmingLanguage struct {
 // Gives RUN instruction for installing the specified programmingLanguage.
 func (langObj programmingLanguage) WriteInstruction() string {
 
-	languageScriptName := fmt.Sprintf("%s_%s.sh", langObj.Name, langObj.Version)
+	scriptName := fmt.Sprintf("%s_%s.sh", langObj.Name, langObj.Version)
 
-	// Check whether the given language and version is available in installation scripts.
+	// Check whether the given language and version are available in the installation scripts.
 	currentDir, _ := os.Getwd()
-	scriptPath := filepath.Join(currentDir, constants.InstallationScriptsDir, languageScriptName)
+	scriptPath := filepath.Join(currentDir, constants.InstallationScriptsDir, scriptName)
 	_, err := os.Stat(scriptPath)
 	if err == nil {
-		result := fmt.Sprintf("RUN ./%s/%s ", constants.InstallationScriptsDir, languageScriptName)
+		result := fmt.Sprintf("RUN ./%s/%s ", constants.InstallationScriptsDir, scriptName)
 		return result
 	} else if os.IsNotExist(err) {
 		log.Fatalf("Installation scripts for given language and version doesn't exists")

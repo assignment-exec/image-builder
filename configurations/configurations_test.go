@@ -27,12 +27,12 @@ RUN ./scripts/gcc_7.sh
 
 // Tests dockerfile template generation.
 func TestDockerfileTemplate(t *testing.T) {
-	data, err := newDockerFileDataFromYamlFile("../code-runner.yaml")
-	tmpl := newDockerfileTemplate(data)
+	data, err := NewDockerFileDataFromYamlFile("../code-runner.yaml")
+	tmpl := NewDockerfileTemplate(data)
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}
-	err = tmpl.generateDockerfileFromTemplate(output)
+	err = tmpl.GenerateDockerfileFromTemplate(output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedCodeRunnerDockerfileContents, output.String())
@@ -42,12 +42,12 @@ func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 
 	os.Chdir("..")
 	fmt.Println(os.Getwd())
-	data, err := newDockerFileDataFromYamlFile("assignment-env.yaml")
-	tmpl := newDockerfileTemplate(data)
+	data, err := NewDockerFileDataFromYamlFile("assignment-env.yaml")
+	tmpl := NewDockerfileTemplate(data)
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}
-	err = tmpl.generateDockerfileFromTemplate(output)
+	err = tmpl.GenerateDockerfileFromTemplate(output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedAssgnEnvDockerfileContents, output.String())
