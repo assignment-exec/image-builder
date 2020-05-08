@@ -1,8 +1,8 @@
 package configurations
 
 import (
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
@@ -10,7 +10,7 @@ import (
 )
 
 type dockerfileDataYaml struct {
-	ServerConfig serverConfig `yaml:"serverConfig"`
+	Config config `yaml:"config"`
 }
 
 // Gives all the instructions after parsing them from yaml.
@@ -56,6 +56,8 @@ func parseSpecificInstruction(instructionName string, value interface{}) instruc
 		return parsePort(v)
 	case "copy":
 		return parseCopy(v)
+	case "programminglanguage":
+		return parseProgrammingLanguage(v)
 	}
 	log.Fatal("unknown instruction in yaml")
 	return nil
@@ -89,6 +91,20 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 	}
 
 	return mapString
+}
+
+// Parses the programmingLanguage instruction from yaml and returns an instance of `programmingLanguage`.
+func parseProgrammingLanguage(data map[string]interface{}) instruction {
+	convertedData := convertMapToMap(data)
+	var lang programmingLanguage
+	if convertedData["name"] != "" {
+		lang.Name = convertedData["name"]
+	}
+
+	if convertedData["version"] != "" {
+		lang.Version = convertedData["version"]
+	}
+	return lang
 }
 
 // Parses the env instruction node from yaml and returns an instance of `env`.
@@ -173,7 +189,7 @@ func parseFrom(value map[string]interface{}) from {
 	return from
 }
 
-// Parses the instruction nodes within every serverConfig node.
+// Parses the instruction nodes within every config node.
 func parseInnerInstructions(in map[string]interface{}) instruction {
 	for key, value := range in {
 
@@ -190,11 +206,11 @@ func parseInnerInstructions(in map[string]interface{}) instruction {
 func unmarshalYamlFile(filename string, node *yaml.Node) error {
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("error in reading yaml file: %v", err)
+		return errors.Wrap(err, "error in reading yaml")
 	}
 	err = yaml.Unmarshal(yamlFile, node)
 	if err != nil {
-		return fmt.Errorf("unmarshal: %v", err)
+		return errors.Wrap(err, "error in unmarshaling yaml")
 	}
 	return nil
 }
@@ -203,12 +219,12 @@ func unmarshalYamlFile(filename string, node *yaml.Node) error {
 func verifyConfigYamlNode(node *yaml.Node) error {
 
 	if node.Kind != yaml.MappingNode {
-		return errors.New("yaml should contain a map that contains a valid serverConfig name key")
+		return errors.New("yaml should contain a map that contains a valid config name key")
 	}
 
 	configKeyNode := node.Content[0]
 	if configKeyNode.Kind != yaml.ScalarNode {
-		return errors.New("yaml should contain a valid serverConfig name key")
+		return errors.New("yaml should contain a valid config name key")
 	}
 
 	return nil

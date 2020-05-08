@@ -1,141 +1,118 @@
 package builder
 
 import (
-	"archive/tar"
-	"bytes"
+	"assignment-exec/image-builder/constants"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/jhoonb/archivex"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 )
 
-type dockerAuthData struct {
-	Username   string `yaml:"username"`
-	Password   string `yaml:"password"`
-	Repository string `yaml:"repository"`
-	Version    string `yaml:"version"`
-}
-
-type ImageBuilder struct {
-	authData       *dockerAuthData
-	dockerFilename string
-}
-
-const dockerIO = "docker.io"
-
-func NewImageBuilder(dockerAuthConfig string, dockerFilename string) *ImageBuilder {
-	dockerAuth, err := getAuthData(dockerAuthConfig)
-	imgBuilder := &ImageBuilder{authData: dockerAuth, dockerFilename: dockerFilename}
-	if err != nil {
-		log.Fatalf("error in reading docker authentication data: %v", err)
-	}
-	return imgBuilder
-}
-
-// Get the docker authentication details.
-func getAuthData(filename string) (*dockerAuthData, error) {
-
-	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read log config file")
-	}
-
-	c := &dockerAuthData{}
-	err = yaml.Unmarshal(yamlFile, c)
-	if err != nil {
-		log.Fatalf("error in unmarshalling yaml: %v", err)
-	}
-
-	return c, nil
-}
-
 // Build Docker Image.
 func (imgBuilder ImageBuilder) BuildImage() error {
 
-	buildContext := context.Background()
+	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
 	if err != nil {
-		log.Fatalf("error in creating a docker client: %v", err)
+		return errors.Wrap(err, "error in creating a docker client")
 	}
 
-	// Create a tar for build context.
-	tarBuffer := new(bytes.Buffer)
-	writer := tar.NewWriter(tarBuffer)
-	defer func() {
-		err = writer.Close()
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-	}()
+	// Create a build context tar for the image.
+	// Build Context is the current working directory and where the Dockerfile is assumed to be located.
+	// [cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/].
+	dockerFilename := imgBuilder.dockerfileName
 
-	dockerFilepath := imgBuilder.dockerFilename
-	dockerFileReader, err := os.Open(dockerFilepath)
+	dockerBuildContext, err := imgBuilder.getDockerBuildContextTar()
 	if err != nil {
-		log.Fatalf(" unable to open dockerfile: %v", err)
+		return err
 	}
-	readDockerFile, err := ioutil.ReadAll(dockerFileReader)
-	if err != nil {
-		log.Fatalf("unable to read dockerfile: %v", err)
-	}
-
-	tarHeader := &tar.Header{
-		Name: dockerFilepath,
-		Size: int64(len(readDockerFile)),
-	}
-	err = writer.WriteHeader(tarHeader)
-	if err != nil {
-		log.Fatalf("unable to write tar header: %v", err)
-	}
-	_, err = writer.Write(readDockerFile)
-	if err != nil {
-		log.Fatalf("unable to write tar body: %v", err)
-	}
-
-	// Use the tar of the Dockerfile while building image.
-	dockerFileTarReader := bytes.NewReader(tarBuffer.Bytes())
 
 	response, err := dockerClient.ImageBuild(
-		buildContext,
-		dockerFileTarReader,
+		backgroundContext,
+		dockerBuildContext,
 		types.ImageBuildOptions{
-			Dockerfile: dockerFilepath,
-			Tags: []string{fmt.Sprintf("%s/%s:%s", imgBuilder.authData.Username,
-				imgBuilder.authData.Repository, imgBuilder.authData.Version)}})
+			Dockerfile: dockerFilename,
+			Tags:       []string{imgBuilder.imageTag}})
 	if err != nil {
-		log.Fatalf("unable to build docker image: %v", err)
+		return errors.Wrap(err, "error in building docker image")
 	}
 	defer func() {
 		err = response.Body.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			return
 		}
 	}()
+
 	_, err = io.Copy(os.Stdout, response.Body)
 	if err != nil {
-		log.Fatalf("unable to read image build response: %v", err)
+		return errors.Wrap(err, "error in reading image build response")
 	}
 
-	return err
+	return nil
+}
+
+// Get Docker Build Context Tar Reader for building image.
+func (imgBuilder ImageBuilder) getDockerBuildContextTar() (*os.File, error) {
+	dockerFileReader, err := os.Open(imgBuilder.dockerfileName)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in opening dockerfile for build context")
+	}
+	fileInfo, err := os.Stat(imgBuilder.dockerfileName)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in verifying dockerfile path")
+	}
+
+	buildContextTar := new(archivex.TarFile)
+	err = buildContextTar.Create(constants.BuildContextTar)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in creating build context tar")
+	}
+	err = buildContextTar.AddAll(constants.InstallationScriptsDir, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in adding installation script to build context tar")
+	}
+
+	err = buildContextTar.Add(imgBuilder.dockerfileName, dockerFileReader, fileInfo)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in adding dockerfile to build context tar")
+	}
+
+	defer func() {
+		err = buildContextTar.Close()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}()
+
+	dockerBuildContext, err := os.Open(constants.BuildContextTar)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in reading build context tar")
+	}
+
+	err = os.Remove(constants.BuildContextTar)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in removing the build context tar file")
+	}
+
+	return dockerBuildContext, nil
 }
 
 func (imgBuilder ImageBuilder) PublishImage() error {
-
 	// TODO: setup ssh keys for logging into docker hub
 
-	buildContext := context.Background()
+	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in creating new docker client")
 	}
 
 	authConfig := types.AuthConfig{
@@ -144,28 +121,27 @@ func (imgBuilder ImageBuilder) PublishImage() error {
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
-		return fmt.Errorf("error when encoding authConfig. err: %v", err)
+		return errors.Wrap(err, "error in encoding authConfig")
 	}
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("%s/%s/%s:%s", dockerIO, imgBuilder.authData.Username,
-		imgBuilder.authData.Repository, imgBuilder.authData.Version)
+	imageString := fmt.Sprintf("%s/%s", constants.DockerIO, imgBuilder.imageTag)
 
-	resp, err := dockerClient.ImagePush(buildContext, imageString, types.ImagePushOptions{
+	resp, err := dockerClient.ImagePush(backgroundContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,
 	})
 	if err != nil {
-		log.Fatalf("unable to push the code runner image to hub: %v", err)
+		return errors.Wrap(err, "error in pushing image to hub")
 	}
 	_, err = io.Copy(os.Stdout, resp)
 	if err != nil {
-		log.Fatalf("unable to read image push response: %v", err)
+		return errors.Wrap(err, "error in reading image push response")
 	}
 	defer func() {
 		err = resp.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			return
 		}
 	}()

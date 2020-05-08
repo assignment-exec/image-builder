@@ -3,10 +3,11 @@ package configurations
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
-var expectedGenericOutput = `FROM golang:latest
+var expectedCodeRunnerDockerfileContents = `FROM golang:latest
 
 ENV GOMODULE=on
 ENV GOFLAGS=-mod=vendor
@@ -18,15 +19,34 @@ CMD ["./code-runner/code-runner-server", "-port", "8082"]
 
 `
 
+var expectedAssgnEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
+RUN ./scripts/gcc_7.sh 
+
+`
+
 // Tests dockerfile template generation.
 func TestDockerfileTemplate(t *testing.T) {
-	data, err := newDockerFileDataFromYamlFile("../code-runner.yaml")
-	tmpl := newDockerfileTemplate(data)
+	data, err := NewDockerFileDataFromYamlFile("../code-runner.yaml")
+	tmpl := NewDockerfileTemplate(data)
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}
-	err = tmpl.generateDockerfileFromTemplate(output)
+	err = tmpl.GenerateDockerfileFromTemplate(output)
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedGenericOutput, output.String())
+	assert.Equal(t, expectedCodeRunnerDockerfileContents, output.String())
+}
+
+func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
+
+	os.Chdir("..")
+	data, err := NewDockerFileDataFromYamlFile("assignment-env.yaml")
+	tmpl := NewDockerfileTemplate(data)
+	assert.NoError(t, err)
+
+	output := &bytes.Buffer{}
+	err = tmpl.GenerateDockerfileFromTemplate(output)
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedAssgnEnvDockerfileContents, output.String())
 }
