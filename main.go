@@ -20,16 +20,19 @@ func main() {
 
 	flag.Parse()
 
-	authData := builder.GetAuthData()
-
-	err := generateCodeRunnerImage(authData)
+	authData, err := builder.GetAuthData()
 	if err != nil {
-		log.Fatalf("error while building code runner image: %v", err)
+		log.Fatalf("error while getting docker authentication data: %v", err)
+	}
+
+	err = generateCodeRunnerImage(authData)
+	if err != nil {
+		log.Fatalf("error in building code runner image: %v", err)
 	}
 
 	err = generateAssignmentEnvImage(authData)
 	if err != nil {
-		log.Fatalf("error while building assignment environment image: %v", err)
+		log.Fatalf("error in building assignment environment image: %v", err)
 	}
 
 }
@@ -38,13 +41,20 @@ func main() {
 func generateCodeRunnerImage(authData *builder.DockerAuthData) error {
 
 	// Unmarshal the yaml configuration file and generate a dockerfileName.
-	err, _, _ := utilities.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
+	err := utilities.WriteDockerfileForCodeRunner(*codeRunnerConfig, *dockerfileName)
 	if err != nil {
 		return errors.Wrap(err, "error in writing dockerfile for code runner")
 	}
 
-	repositoryName := os.Getenv(environment.CodeRunnerRepository)
-	repositoryVersion := os.Getenv(environment.CodeRunnerRepositoryVersion)
+	repositoryName, found := os.LookupEnv(environment.CodeRunnerRepository)
+	if !found {
+		return errors.New("environment variable for repository not set")
+	}
+	repositoryVersion, found := os.LookupEnv(environment.CodeRunnerRepositoryVersion)
+	if !found {
+		return errors.New("environment variable for repository version not set")
+	}
+
 	imageTag := fmt.Sprintf("%s/%s:%s", authData.Username, repositoryName, repositoryVersion)
 
 	imgBuilder, err := builder.NewImageBuilder(
@@ -71,7 +81,7 @@ func generateCodeRunnerImage(authData *builder.DockerAuthData) error {
 
 // Generate a dockerfile for assignment environment and build its image.
 func generateAssignmentEnvImage(authData *builder.DockerAuthData) error {
-	err, language, version := utilities.WriteDockerfile(*assignmentEnv, *dockerfileName)
+	err, language, version := utilities.WriteDockerfileForAssignmentEnv(*assignmentEnv, *dockerfileName)
 	if err != nil {
 		return errors.Wrap(err, "error in writing dockerfile for assignment environment")
 	}

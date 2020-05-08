@@ -96,18 +96,15 @@ func convertMapToMap(mapInterface map[string]interface{}) map[string]string {
 // Parses the programmingLanguage instruction from yaml and returns an instance of `programmingLanguage`.
 func parseProgrammingLanguage(data map[string]interface{}) instruction {
 	convertedData := convertMapToMap(data)
-	var langObj programmingLanguage
+	var lang programmingLanguage
 	if convertedData["name"] != "" {
-		langObj.Name = convertedData["name"]
-		if strings.Contains(langObj.Name, "+") {
-			langObj.Name = strings.ReplaceAll(langObj.Name, "+", "p")
-		}
+		lang.Name = convertedData["name"]
 	}
 
 	if convertedData["version"] != "" {
-		langObj.Version = convertedData["version"]
+		lang.Version = convertedData["version"]
 	}
-	return langObj
+	return lang
 }
 
 // Parses the env instruction node from yaml and returns an instance of `env`.

@@ -65,9 +65,16 @@ func WithImageTag(tag string) ImageBuilderOption {
 }
 
 // Get the docker authentication details.
-func GetAuthData() *DockerAuthData {
-	c := &DockerAuthData{}
-	c.Username = os.Getenv(environment.DockerAuthUsername)
-	c.Password = os.Getenv(environment.DockerAuthPassword)
-	return c
+func GetAuthData() (*DockerAuthData, error) {
+	username, found := os.LookupEnv(environment.DockerAuthUsername)
+	if !found {
+		return nil, errors.New("environment variable for username not set")
+	}
+	password, found := os.LookupEnv(environment.DockerAuthPassword)
+	if !found {
+		return nil, errors.New("environment variable for password not set")
+	}
+
+	c := &DockerAuthData{Username: username, Password: password}
+	return c, nil
 }

@@ -2,7 +2,6 @@ package configurations
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -41,7 +40,6 @@ func TestDockerfileTemplate(t *testing.T) {
 func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 
 	os.Chdir("..")
-	fmt.Println(os.Getwd())
 	data, err := NewDockerFileDataFromYamlFile("assignment-env.yaml")
 	tmpl := NewDockerfileTemplate(data)
 	assert.NoError(t, err)

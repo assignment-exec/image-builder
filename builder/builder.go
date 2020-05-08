@@ -21,13 +21,12 @@ func (imgBuilder ImageBuilder) BuildImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
 	if err != nil {
-		log.Println("error in creating a docker client: ", err)
 		return errors.Wrap(err, "error in creating a docker client")
 	}
 
 	// Create a build context tar for the image.
-	// Build Context is the current working directory and where the Dockerfile is assumed to be located
-	//[cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/]..
+	// Build Context is the current working directory and where the Dockerfile is assumed to be located.
+	// [cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/].
 	dockerFilename := imgBuilder.dockerfileName
 
 	dockerBuildContext, err := imgBuilder.getDockerBuildContextTar()
