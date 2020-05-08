@@ -2,7 +2,6 @@ package builder
 
 import (
 	"assignment-exec/image-builder/constants"
-	"assignment-exec/image-builder/environment"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -16,39 +15,8 @@ import (
 	"os"
 )
 
-type dockerAuthData struct {
-	Username   string
-	Password   string
-	Repository string
-	Version    string
-}
-
-type ImageBuilder struct {
-	authData       *dockerAuthData
-	dockerFilename string
-	Language       string
-	Version        string
-}
-
-// New Image Builder instance.
-func NewImageBuilder(dockerFilename string) *ImageBuilder {
-	dockerAuth := getAuthData()
-	imgBuilder := &ImageBuilder{authData: dockerAuth, dockerFilename: dockerFilename}
-	return imgBuilder
-}
-
-// Get the docker authentication details.
-func getAuthData() *dockerAuthData {
-	c := &dockerAuthData{}
-	c.Username = os.Getenv(environment.DockerAuthUsername)
-	c.Password = os.Getenv(environment.DockerAuthPassword)
-	c.Repository = os.Getenv(environment.DockerAuthRepository)
-	c.Version = os.Getenv(environment.DockerAuthRepositoryVersion)
-	return c
-}
-
 // Build Docker Image.
-func (imgBuilder ImageBuilder) BuildImage(assignmentEnv bool) error {
+func (imgBuilder ImageBuilder) BuildImage() error {
 
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -60,20 +28,19 @@ func (imgBuilder ImageBuilder) BuildImage(assignmentEnv bool) error {
 	// Create a build context tar for the image.
 	// Build Context is the current working directory and where the Dockerfile is assumed to be located
 	//[cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/]..
-	dockerFilename := imgBuilder.dockerFilename
+	dockerFilename := imgBuilder.dockerfileName
 
 	dockerBuildContext, err := imgBuilder.getDockerBuildContextTar()
 	if err != nil {
 		return err
 	}
 
-	tagName := imgBuilder.getTagName(assignmentEnv)
 	response, err := dockerClient.ImageBuild(
 		backgroundContext,
 		dockerBuildContext,
 		types.ImageBuildOptions{
 			Dockerfile: dockerFilename,
-			Tags:       []string{tagName}})
+			Tags:       []string{imgBuilder.imageTag}})
 	if err != nil {
 		return errors.Wrap(err, "error in building docker image")
 	}
@@ -93,26 +60,13 @@ func (imgBuilder ImageBuilder) BuildImage(assignmentEnv bool) error {
 	return nil
 }
 
-// Get Tag name for building image.
-func (imgBuilder ImageBuilder) getTagName(assignmentEnv bool) string {
-	var tagName string
-	if assignmentEnv {
-		tagName = fmt.Sprintf("%s/%s%s", imgBuilder.authData.Username, imgBuilder.Language, imgBuilder.Version)
-	} else {
-		tagName = fmt.Sprintf("%s/%s:%s", imgBuilder.authData.Username,
-			imgBuilder.authData.Repository, imgBuilder.authData.Version)
-	}
-
-	return tagName
-}
-
 // Get Docker Build Context Tar Reader for building image.
 func (imgBuilder ImageBuilder) getDockerBuildContextTar() (*os.File, error) {
-	dockerFileReader, err := os.Open(imgBuilder.dockerFilename)
+	dockerFileReader, err := os.Open(imgBuilder.dockerfileName)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in opening dockerfile for build context")
 	}
-	fileInfo, err := os.Stat(imgBuilder.dockerFilename)
+	fileInfo, err := os.Stat(imgBuilder.dockerfileName)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in verifying dockerfile path")
 	}
@@ -127,7 +81,7 @@ func (imgBuilder ImageBuilder) getDockerBuildContextTar() (*os.File, error) {
 		return nil, errors.Wrap(err, "error in adding installation script to build context tar")
 	}
 
-	err = buildContextTar.Add(imgBuilder.dockerFilename, dockerFileReader, fileInfo)
+	err = buildContextTar.Add(imgBuilder.dockerfileName, dockerFileReader, fileInfo)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in adding dockerfile to build context tar")
 	}
@@ -173,8 +127,7 @@ func (imgBuilder ImageBuilder) PublishImage() error {
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	imageString := fmt.Sprintf("%s/%s/%s:%s", constants.DockerIO, imgBuilder.authData.Username,
-		imgBuilder.authData.Repository, imgBuilder.authData.Version)
+	imageString := fmt.Sprintf("%s/%s", constants.DockerIO, imgBuilder.imageTag)
 
 	resp, err := dockerClient.ImagePush(backgroundContext, imageString, types.ImagePushOptions{
 		RegistryAuth: authStr,

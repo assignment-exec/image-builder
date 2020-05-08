@@ -2,10 +2,13 @@ package main
 
 import (
 	"assignment-exec/image-builder/builder"
+	"assignment-exec/image-builder/environment"
 	"assignment-exec/image-builder/utilities"
 	"flag"
+	"fmt"
 	"github.com/pkg/errors"
 	"log"
+	"os"
 )
 
 var publishImage = flag.Bool("publishImage", false, "Push image to docker hub")
@@ -17,14 +20,14 @@ func main() {
 
 	flag.Parse()
 
-	imgBuilder := builder.NewImageBuilder(*dockerfileName)
+	authData := builder.GetAuthData()
 
-	err := generateCodeRunnerImage(imgBuilder)
+	err := generateCodeRunnerImage(authData)
 	if err != nil {
 		log.Fatalf("error while building code runner image: %v", err)
 	}
 
-	err = generateAssignmentEnvImage(imgBuilder)
+	err = generateAssignmentEnvImage(authData)
 	if err != nil {
 		log.Fatalf("error while building assignment environment image: %v", err)
 	}
@@ -32,7 +35,7 @@ func main() {
 }
 
 // Generate a dockerfile for code runner server, build its image and push it ot docker hub.
-func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
+func generateCodeRunnerImage(authData *builder.DockerAuthData) error {
 
 	// Unmarshal the yaml configuration file and generate a dockerfileName.
 	err, _, _ := utilities.WriteDockerfile(*codeRunnerConfig, *dockerfileName)
@@ -40,7 +43,19 @@ func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 		return errors.Wrap(err, "error in writing dockerfile for code runner")
 	}
 
-	err = imgBuilder.BuildImage(false)
+	repositoryName := os.Getenv(environment.CodeRunnerRepository)
+	repositoryVersion := os.Getenv(environment.CodeRunnerRepositoryVersion)
+	imageTag := fmt.Sprintf("%s/%s:%s", authData.Username, repositoryName, repositoryVersion)
+
+	imgBuilder, err := builder.NewImageBuilder(
+		builder.WithDockerAuthData(authData),
+		builder.WithImageTag(imageTag),
+		builder.WithDockerfileName(*dockerfileName))
+
+	if err != nil {
+		return errors.Wrap(err, "error in creating image builder instance for code runner")
+	}
+	err = imgBuilder.BuildImage()
 	if err != nil {
 		return err
 	}
@@ -55,17 +70,33 @@ func generateCodeRunnerImage(imgBuilder *builder.ImageBuilder) error {
 }
 
 // Generate a dockerfile for assignment environment and build its image.
-func generateAssignmentEnvImage(imgBuilder *builder.ImageBuilder) error {
+func generateAssignmentEnvImage(authData *builder.DockerAuthData) error {
 	err, language, version := utilities.WriteDockerfile(*assignmentEnv, *dockerfileName)
 	if err != nil {
 		return errors.Wrap(err, "error in writing dockerfile for assignment environment")
 	}
 
-	imgBuilder.Language = language
-	imgBuilder.Version = version
-	err = imgBuilder.BuildImage(true)
+	imageTag := fmt.Sprintf("%s/%s%s", authData.Username, language, version)
+
+	imgBuilder, err := builder.NewImageBuilder(
+		builder.WithDockerAuthData(authData),
+		builder.WithImageTag(imageTag),
+		builder.WithDockerfileName(*dockerfileName))
+
+	if err != nil {
+		return errors.Wrap(err, "error in creating image builder instance for assignment env")
+	}
+
+	err = imgBuilder.BuildImage()
 	if err != nil {
 		return err
+	}
+
+	if *publishImage {
+		err = imgBuilder.PublishImage()
+		if err != nil {
+			return errors.Wrap(err, "error in pushing code runner image")
+		}
 	}
 
 	return nil
