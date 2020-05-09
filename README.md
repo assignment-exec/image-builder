@@ -54,7 +54,7 @@ dependencies:
 ### Docker Setup
 See [instructions](https://docs.docker.com/engine/installation/) for installing docker engine on different supported platforms.
 
-## Run Docker image for Assignment Environment
+## Run Docker Image for Assignment Environment
 Following is the command used to run the docker image for assignment environment.
 ```commandline
 docker run --publish <code-runner_server_port> <assignment_environment_image>
