@@ -2,6 +2,7 @@ package configurations
 
 import (
 	"assignment-exec/image-builder/constants"
+	"assignment-exec/image-builder/utilities/validation"
 	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
@@ -20,23 +21,21 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		BaseImage string     `yaml:"baseImage"`
 		Deps      Dependency `yaml:"dependencies"`
 	}
-
 	temp := &tempConfig{}
 
 	if err := unmarshal(temp); err != nil {
 		return errors.Wrap(err, "failed to unmarshal assignment environment configuration")
 	}
 
-	// Validate language.
-	lang := temp.Deps.Language.Name
-	version := temp.Deps.Language.Version
-	if err := validateLang(lang, version); err != nil {
-		return errors.Wrap(err, "programming language not supported")
-	}
+	// Validate the configuration data.
+	err := validation.Validate("invalid configuration",
+		ValidatorForConfig(Config(*temp),
+			withBaseImageValidator(),
+			withLanguageValidator(),
+			withLibsValidator()))
 
-	// Validate Base Image.
-	if err := validateBaseImage(temp.BaseImage); err != nil {
-		return errors.Wrap(err, "base image not found in docker registry")
+	if err != nil {
+		return err
 	}
 
 	// All validations passed.
@@ -83,7 +82,7 @@ type LanguageReq struct {
 }
 
 func (lr LanguageReq) String() string {
-	return fmt.Sprintf("RUN ./%s/%s_%s.sh",constants.InstallationScriptsDir,lr.Name ,lr.Version)
+	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, lr.Name, lr.Version)
 }
 
 func GetConfig(configFilename string) (*Config, error) {

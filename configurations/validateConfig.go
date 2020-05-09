@@ -54,8 +54,8 @@ func validateBaseImage(baseImage string) error {
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
 	_, err = dockerClient.ImageSearch(backgroundContext, baseImage, types.ImageSearchOptions{
-		RegistryAuth:  authStr,
-		Limit: 10})
+		RegistryAuth: authStr,
+		Limit:        10})
 
 	if err != nil {
 		return err
