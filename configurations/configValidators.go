@@ -7,10 +7,10 @@ import (
 
 type configValidator func(AssignmentEnvConfig) error
 
-func ValidatorForConfig(d AssignmentEnvConfig, configValidators ...configValidator) validation.Validator {
+func ValidatorForConfig(cfg AssignmentEnvConfig, configValidators ...configValidator) validation.Validator {
 	return func() error {
-		for _, cv := range configValidators {
-			if err := cv(d); err != nil {
+		for _, cfgValidator := range configValidators {
+			if err := cfgValidator(cfg); err != nil {
 				return err
 			}
 		}
@@ -25,23 +25,19 @@ func withBaseImageValidator() configValidator {
 			return errors.New("base image name cannot be empty string")
 		}
 
-		err := validateBaseImage(d.BaseImage)
-		if err != nil {
-			return err
-		}
-		return nil
+		return validateBaseImage(d.BaseImage)
 	}
 }
 
 func withLanguageValidator() configValidator {
-	return func(d AssignmentEnvConfig) error {
+	return func(cfg AssignmentEnvConfig) error {
 		// Language name and version name cannot be empty string.
-		if d.Dependencies.Language.Name == "" || d.Dependencies.Language.Version == "" {
+		if cfg.Deps.Language.Name == "" || cfg.Deps.Language.Version == "" {
 			return errors.New("language name and version cannot be empty string")
 		}
 
-		lang := d.Dependencies.Language.Name
-		version := d.Dependencies.Language.Version
+		lang := cfg.Deps.Language.Name
+		version := cfg.Deps.Language.Version
 		if err := validateLang(lang, version); err != nil {
 			return errors.Wrap(err, "programming language not supported")
 		}
@@ -52,7 +48,7 @@ func withLanguageValidator() configValidator {
 func withLibsValidator() configValidator {
 	return func(d AssignmentEnvConfig) error {
 		// Library installation commands cannot be empty strings.
-		for s, libInstallCmd := range d.Dependencies.Libraries {
+		for s, libInstallCmd := range d.Deps.Libraries {
 			if s == "" || libInstallCmd.Cmd == "" {
 				return errors.New("library installation command cannot be empty string")
 			}

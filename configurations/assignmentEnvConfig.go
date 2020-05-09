@@ -11,15 +11,15 @@ import (
 )
 
 type AssignmentEnvConfig struct {
-	BaseImage    string         `yaml:"baseImage"`
-	Dependencies LangDependency `yaml:"dependencies"`
+	BaseImage string       `yaml:"baseImage"`
+	Deps      Dependencies `yaml:"dependencies"`
 }
 
 func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	type tempAssignmentEnvConfig struct {
-		BaseImage    string         `yaml:"baseImage"`
-		Dependencies LangDependency `yaml:"dependencies"`
+		BaseImage string       `yaml:"baseImage"`
+		Deps      Dependencies `yaml:"dependencies"`
 	}
 	temp := &tempAssignmentEnvConfig{}
 
@@ -39,29 +39,29 @@ func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) err
 	}
 
 	config.BaseImage = temp.BaseImage
-	config.Dependencies = temp.Dependencies
+	config.Deps = temp.Deps
 	return nil
 }
 
-func (config AssignmentEnvConfig) String() string {
+func (config AssignmentEnvConfig) WriteInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString("FROM " + config.BaseImage)
 	buf.WriteString("\n")
-	buf.WriteString(config.Dependencies.String() + "\n")
+	buf.WriteString(config.Deps.WriteInstruction() + "\n")
 	return buf.String()
 }
 
-type LangDependency struct {
+type Dependencies struct {
 	Language  LanguageInfo                  `yaml:",inline"`
 	Libraries map[string]LibInstallationCmd `yaml:"lib"`
 }
 
-func (langDep LangDependency) String() string {
+func (langDep Dependencies) WriteInstruction() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString(langDep.Language.String())
+	buf.WriteString(langDep.Language.WriteInstruction())
 	buf.WriteString("\n")
 	for lib, installCmd := range langDep.Libraries {
-		buf.WriteString("RUN " + installCmd.String() + " " + lib)
+		buf.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)
 		buf.WriteString("\n")
 	}
 	return buf.String()
@@ -71,7 +71,7 @@ type LibInstallationCmd struct {
 	Cmd string `yaml:"cmd"`
 }
 
-func (libCmd LibInstallationCmd) String() string {
+func (libCmd LibInstallationCmd) WriteInstruction() string {
 	return libCmd.Cmd
 }
 
@@ -80,11 +80,11 @@ type LanguageInfo struct {
 	Version string `yaml:"langVersion"`
 }
 
-func (langInfo LanguageInfo) String() string {
+func (langInfo LanguageInfo) WriteInstruction() string {
 	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
-func GetConfig(configFilename string) (*AssignmentEnvConfig, error) {
+func GetAssignmentEnvConfig(configFilename string) (*AssignmentEnvConfig, error) {
 
 	yamlFile, err := ioutil.ReadFile(configFilename)
 	if err != nil {

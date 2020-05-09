@@ -6,8 +6,11 @@ import (
 	"os"
 )
 
-func WriteDockerfileForAssignmentEnv(configFilename string, dockerFilename string) (error, string, string) {
-	c, _ := configurations.GetConfig(configFilename)
+func WriteDockerfileForAssignmentEnv(configFilename string, dockerFilename string) (err error, language string, version string) {
+	c, err := configurations.GetAssignmentEnvConfig(configFilename)
+	if err != nil {
+		return err, "", ""
+	}
 	file, err := os.Create(dockerFilename)
 	defer func() {
 		err = file.Close()
@@ -19,7 +22,7 @@ func WriteDockerfileForAssignmentEnv(configFilename string, dockerFilename strin
 	if err != nil {
 		return err, "", ""
 	}
-	_, err = file.WriteString(c.String())
+	_, err = file.WriteString(c.WriteInstruction())
 
-	return err, c.Dependencies.Language.Name, c.Dependencies.Language.Version
+	return err, c.Deps.Language.Name, c.Deps.Language.Version
 }
