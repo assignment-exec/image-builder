@@ -21,5 +21,5 @@ func WriteDockerfileForAssignmentEnv(configFilename string, dockerFilename strin
 	}
 	_, err = file.WriteString(c.String())
 
-	return err, c.Deps.Language.Name, c.Deps.Language.Version
+	return err, c.Dependencies.Language.Name, c.Dependencies.Language.Version
 }

@@ -5,28 +5,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-type configValidator func(Config) error
+type dockerConfigValidator func(DockerConfig) error
 
-func ValidatorForConfig(t Config, configValidators ...configValidator) validation.Validator {
+func ValidatorForConfig(d DockerConfig, configValidators ...dockerConfigValidator) validation.Validator {
 	return func() error {
-		for _, tv := range configValidators {
-			if err := tv(t); err != nil {
+		for _, cv := range configValidators {
+			if err := cv(d); err != nil {
 				return err
 			}
 		}
-
 		return nil
 	}
 }
 
-func withBaseImageValidator() configValidator {
-	return func(c Config) error {
+func withBaseImageValidator() dockerConfigValidator {
+	return func(d DockerConfig) error {
 		// Base Image name cannot be empty string.
-		if c.BaseImage == "" {
+		if d.BaseImage == "" {
 			return errors.New("base image name cannot be empty string")
 		}
 
-		err := validateBaseImage(c.BaseImage)
+		err := validateBaseImage(d.BaseImage)
 		if err != nil {
 			return err
 		}
@@ -34,15 +33,15 @@ func withBaseImageValidator() configValidator {
 	}
 }
 
-func withLanguageValidator() configValidator {
-	return func(c Config) error {
+func withLanguageValidator() dockerConfigValidator {
+	return func(d DockerConfig) error {
 		// Language name and version name cannot be empty string.
-		if c.Deps.Language.Name == "" || c.Deps.Language.Version == "" {
+		if d.Dependencies.Language.Name == "" || d.Dependencies.Language.Version == "" {
 			return errors.New("language name and version cannot be empty string")
 		}
 
-		lang := c.Deps.Language.Name
-		version := c.Deps.Language.Version
+		lang := d.Dependencies.Language.Name
+		version := d.Dependencies.Language.Version
 		if err := validateLang(lang, version); err != nil {
 			return errors.Wrap(err, "programming language not supported")
 		}
@@ -50,10 +49,10 @@ func withLanguageValidator() configValidator {
 	}
 }
 
-func withLibsValidator() configValidator {
-	return func(c Config) error {
+func withLibsValidator() dockerConfigValidator {
+	return func(d DockerConfig) error {
 		// Library installation commands cannot be empty strings.
-		for s, libInstallCmd := range c.Deps.Libs {
+		for s, libInstallCmd := range d.Dependencies.Libraries {
 			if s == "" || libInstallCmd.Cmd == "" {
 				return errors.New("library installation command cannot be empty string")
 			}

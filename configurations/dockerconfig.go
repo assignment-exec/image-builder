@@ -8,28 +8,28 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"log"
 )
 
-type Config struct {
-	BaseImage string     `yaml:"baseImage"`
-	Deps      Dependency `yaml:"dependencies"`
+type DockerConfig struct {
+	BaseImage    string         `yaml:"baseImage"`
+	Dependencies LangDependency `yaml:"dependencies"`
 }
 
-func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type tempConfig struct {
-		BaseImage string     `yaml:"baseImage"`
-		Deps      Dependency `yaml:"dependencies"`
+func (config *DockerConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+
+	type tempDockerConfig struct {
+		BaseImage    string         `yaml:"baseImage"`
+		Dependencies LangDependency `yaml:"dependencies"`
 	}
-	temp := &tempConfig{}
+	temp := &tempDockerConfig{}
 
 	if err := unmarshal(temp); err != nil {
-		return errors.Wrap(err, "failed to unmarshal assignment environment configuration")
+		return errors.Wrap(err, "error in unmarshaling assignment environment configuration")
 	}
 
 	// Validate the configuration data.
-	err := validation.Validate("invalid configuration",
-		ValidatorForConfig(Config(*temp),
+	err := validation.Validate("error in configuration",
+		ValidatorForConfig(DockerConfig(*temp),
 			withBaseImageValidator(),
 			withLanguageValidator(),
 			withLibsValidator()))
@@ -38,64 +38,63 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
-	// All validations passed.
-	c.BaseImage = temp.BaseImage
-	c.Deps = temp.Deps
+	config.BaseImage = temp.BaseImage
+	config.Dependencies = temp.Dependencies
 	return nil
 }
 
-func (c Config) String() string {
+func (config DockerConfig) String() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString("FROM " + c.BaseImage)
+	buf.WriteString("FROM " + config.BaseImage)
 	buf.WriteString("\n")
-	buf.WriteString(c.Deps.String() + "\n")
+	buf.WriteString(config.Dependencies.String() + "\n")
 	return buf.String()
 }
 
-type Dependency struct {
-	Language LanguageReq              `yaml:",inline"`
-	Libs     map[string]LibInstallCmd `yaml:"lib"`
+type LangDependency struct {
+	Language  LanguageInfo                  `yaml:",inline"`
+	Libraries map[string]LibInstallationCmd `yaml:"lib"`
 }
 
-func (d Dependency) String() string {
+func (langDep LangDependency) String() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString(d.Language.String())
+	buf.WriteString(langDep.Language.String())
 	buf.WriteString("\n")
-	for lib, installCmd := range d.Libs {
+	for lib, installCmd := range langDep.Libraries {
 		buf.WriteString("RUN " + installCmd.String() + " " + lib)
 		buf.WriteString("\n")
 	}
 	return buf.String()
 }
 
-type LibInstallCmd struct {
+type LibInstallationCmd struct {
 	Cmd string `yaml:"cmd"`
 }
 
-func (lic LibInstallCmd) String() string {
-	return lic.Cmd
+func (libCmd LibInstallationCmd) String() string {
+	return libCmd.Cmd
 }
 
-type LanguageReq struct {
+type LanguageInfo struct {
 	Name    string `yaml:"lang"`
 	Version string `yaml:"langVersion"`
 }
 
-func (lr LanguageReq) String() string {
-	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, lr.Name, lr.Version)
+func (langInfo LanguageInfo) String() string {
+	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
-func GetConfig(configFilename string) (*Config, error) {
+func GetConfig(configFilename string) (*DockerConfig, error) {
 
 	yamlFile, err := ioutil.ReadFile(configFilename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read log config file")
 	}
 
-	c := &Config{}
+	c := &DockerConfig{}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
-		log.Fatalf("Error in unmarshalling yaml: %v", err)
+		return nil, errors.Wrap(err, "error in unmarshaling yaml: %v")
 	}
 
 	return c, nil
