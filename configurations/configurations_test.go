@@ -21,7 +21,7 @@ func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}
-	_, err = output.WriteString(data.String())
+	_, err = output.WriteString(data.WriteInstruction())
 	assert.NoError(t, err)
 
 	assert.Equal(t, expectedAssgnEnvDockerfileContents, output.String())
