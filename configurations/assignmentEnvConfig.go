@@ -10,18 +10,18 @@ import (
 	"io/ioutil"
 )
 
-type DockerConfig struct {
+type AssignmentEnvConfig struct {
 	BaseImage    string         `yaml:"baseImage"`
 	Dependencies LangDependency `yaml:"dependencies"`
 }
 
-func (config *DockerConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
-	type tempDockerConfig struct {
+	type tempAssignmentEnvConfig struct {
 		BaseImage    string         `yaml:"baseImage"`
 		Dependencies LangDependency `yaml:"dependencies"`
 	}
-	temp := &tempDockerConfig{}
+	temp := &tempAssignmentEnvConfig{}
 
 	if err := unmarshal(temp); err != nil {
 		return errors.Wrap(err, "error in unmarshaling assignment environment configuration")
@@ -29,7 +29,7 @@ func (config *DockerConfig) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 	// Validate the configuration data.
 	err := validation.Validate("error in configuration",
-		ValidatorForConfig(DockerConfig(*temp),
+		ValidatorForConfig(AssignmentEnvConfig(*temp),
 			withBaseImageValidator(),
 			withLanguageValidator(),
 			withLibsValidator()))
@@ -43,7 +43,7 @@ func (config *DockerConfig) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return nil
 }
 
-func (config DockerConfig) String() string {
+func (config AssignmentEnvConfig) String() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString("FROM " + config.BaseImage)
 	buf.WriteString("\n")
@@ -84,14 +84,14 @@ func (langInfo LanguageInfo) String() string {
 	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
-func GetConfig(configFilename string) (*DockerConfig, error) {
+func GetConfig(configFilename string) (*AssignmentEnvConfig, error) {
 
 	yamlFile, err := ioutil.ReadFile(configFilename)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read log config file")
 	}
 
-	c := &DockerConfig{}
+	c := &AssignmentEnvConfig{}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in unmarshaling yaml: %v")
