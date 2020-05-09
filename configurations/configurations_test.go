@@ -26,8 +26,8 @@ RUN ./scripts/gcc_7.sh
 
 // Tests dockerfile template generation.
 func TestDockerfileTemplate(t *testing.T) {
-	data, err := NewDockerFileDataFromYamlFile("../code-runner.yaml")
-	tmpl := NewDockerfileTemplate(data)
+	data, instructions, err := ParseInstructions("../code-runner.yaml")
+	tmpl := NewDockerConfigTemplate(data, instructions)
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}
@@ -40,8 +40,8 @@ func TestDockerfileTemplate(t *testing.T) {
 func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 
 	os.Chdir("..")
-	data, err := NewDockerFileDataFromYamlFile("assignment-env.yaml")
-	tmpl := NewDockerfileTemplate(data)
+	data, instructions, err := ParseInstructions("assignment-env.yaml")
+	tmpl := NewDockerConfigTemplate(data, instructions)
 	assert.NoError(t, err)
 
 	output := &bytes.Buffer{}

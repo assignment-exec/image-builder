@@ -1,6 +1,5 @@
-config:
-  - from:
-      image: assignmentexec/code-runner:1.0
-  - programmingLanguage:
-      name: gcc
-      version: 7
+from:
+  image: assignmentexec/code-runner:1.0
+programmingLanguage:
+  name: gcc
+  version: 7

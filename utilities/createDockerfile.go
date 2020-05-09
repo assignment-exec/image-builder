@@ -9,12 +9,12 @@ import (
 
 // Creates a template and writes it to a new Dockerfile.
 func WriteDockerfileForCodeRunner(configFilename string, dockerFilename string) error {
-	data, err := configurations.NewDockerFileDataFromYamlFile(configFilename)
+	data, instructions, err := configurations.ParseInstructions(configFilename)
 	if err != nil {
 		return err
 	}
 
-	tmpl := configurations.NewDockerfileTemplate(data)
+	tmpl := configurations.NewDockerConfigTemplate(data, instructions)
 
 	file, err := os.Create(dockerFilename)
 	defer func() {
@@ -34,12 +34,12 @@ func WriteDockerfileForCodeRunner(configFilename string, dockerFilename string) 
 }
 
 func WriteDockerfileForAssignmentEnv(configFilename string, dockerFilename string) (error, string, string) {
-	data, err := configurations.NewDockerFileDataFromYamlFile(configFilename)
+	data, instructions, err := configurations.ParseInstructions(configFilename)
 	if err != nil {
 		return err, "", ""
 	}
 
-	tmpl := configurations.NewDockerfileTemplate(data)
+	tmpl := configurations.NewDockerConfigTemplate(data, instructions)
 
 	file, err := os.Create(dockerFilename)
 	defer func() {
