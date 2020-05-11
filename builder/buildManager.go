@@ -28,11 +28,12 @@ func WithCommands(assgnEnv *assignmentEnv) BuildManagerOption {
 	return func(b *BuildManager) error {
 
 		var commandList []command
-		commandList = append(commandList, &verifyCommand{assgnEnv: assgnEnv})
-		commandList = append(commandList, &writeDockerfileCommand{assgnEnv: assgnEnv})
-		commandList = append(commandList, &buildCommand{assgnEnv: assgnEnv})
-		commandList = append(commandList, &publishCommand{assgnEnv: assgnEnv})
-		b.commands = commandList
+		commandList = append(commandList,
+			&verifyCommand{assgnEnv: assgnEnv},
+			&writeDockerfileCommand{assgnEnv: assgnEnv},
+			&buildCommand{assgnEnv: assgnEnv},
+			&publishCommand{assgnEnv: assgnEnv})
+
 		return nil
 	}
 }
@@ -53,7 +54,7 @@ func (builder *BuildManager) ExecuteCommands() error {
 }
 
 func (builder *BuildManager) UndoCommands() error {
-	for len(*builder.undoCommands) > 0 {
+	for !builder.undoCommands.isEmpty() {
 		undoCmd := builder.undoCommands.pop()
 		if err := undoCmd.undo(); err != nil {
 			return err

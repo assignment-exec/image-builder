@@ -17,7 +17,7 @@ type dockerAuthData struct {
 type imageBuildConfig struct {
 	authData       *dockerAuthData
 	imageTag       string
-	dockerfileName string
+	dockerFilepath string
 	publishImage   bool
 }
 
@@ -39,7 +39,7 @@ func withDockerfileName(filename string) imageBuildConfigOption {
 		if filename == "" {
 			return errors.New("dockerfile name not provided")
 		}
-		imgBuildCfg.dockerfileName = filename
+		imgBuildCfg.dockerFilepath = filename
 		return nil
 
 	}
@@ -91,11 +91,11 @@ func getAuthData() (*dockerAuthData, error) {
 
 // Get Docker build Context Tar Reader for building image.
 func (imgBuildCfg imageBuildConfig) getDockerBuildContextTar() (*os.File, error) {
-	dockerFileReader, err := os.Open(imgBuildCfg.dockerfileName)
+	dockerFileReader, err := os.Open(imgBuildCfg.dockerFilepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in opening dockerfile for build context")
 	}
-	fileInfo, err := os.Stat(imgBuildCfg.dockerfileName)
+	fileInfo, err := os.Stat(imgBuildCfg.dockerFilepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in verifying dockerfile path")
 	}
@@ -110,7 +110,7 @@ func (imgBuildCfg imageBuildConfig) getDockerBuildContextTar() (*os.File, error)
 		return nil, errors.Wrap(err, "error in adding installation script to build context tar")
 	}
 
-	err = buildContextTar.Add(imgBuildCfg.dockerfileName, dockerFileReader, fileInfo)
+	err = buildContextTar.Add(imgBuildCfg.dockerFilepath, dockerFileReader, fileInfo)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in adding dockerfile to build context tar")
 	}

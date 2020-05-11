@@ -7,14 +7,14 @@ import (
 )
 
 var publishImage = flag.Bool("publishImage", false, "push image to docker hub")
-var assignmentEnvFilename = flag.String("assignmentEnv", "assignment-env.yaml", "Assignment Environment configuration filename")
-var dockerfileName = flag.String("dockerfile", "Dockerfile", "Dockerfile name")
+var assignmentEnvConfigFilename = flag.String("assignmentEnvConfig", "assignment-env.yaml", "Assignment Environment configuration filename")
+var dockerFilepath = flag.String("dockerfile", "Dockerfile", "Dockerfile name")
 
 func main() {
 
 	flag.Parse()
 
-	assgnEnv, err := builder.GetConfigurations(*publishImage, *assignmentEnvFilename, *dockerfileName)
+	assgnEnv, err := builder.GetConfigurations(*publishImage, *assignmentEnvConfigFilename, *dockerFilepath)
 	if err != nil {
 		log.Fatalf("error in getting configurations: %v", err)
 	}

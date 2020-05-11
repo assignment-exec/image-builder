@@ -12,9 +12,14 @@ func newStack() *stack {
 	return (*stack)(&s)
 }
 
+func (s stack) isEmpty() bool { return len(s) == 0 }
+
 func (s *stack) pop() command {
-	v := (*s)[len(*s)-1]
-	*s = (*s)[:len(*s)-1]
+	var v command
+	if !s.isEmpty() {
+		v = (*s)[len(*s)-1]
+		*s = (*s)[:len(*s)-1]
+	}
 	return v
 }
 

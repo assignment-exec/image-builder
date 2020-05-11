@@ -40,7 +40,6 @@ func validateBaseImage(baseImage string) error {
 
 	resp, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
 		Limit: 10})
-	fmt.Println(resp)
 	if err != nil {
 		return err
 	} else {
