@@ -19,13 +19,13 @@ func ValidatorForConfig(cfg AssignmentEnvConfig, configValidators ...configValid
 }
 
 func withBaseImageValidator() configValidator {
-	return func(d AssignmentEnvConfig) error {
+	return func(cfg AssignmentEnvConfig) error {
 		// Base Image name cannot be empty string.
-		if d.BaseImage == "" {
+		if cfg.BaseImage == "" {
 			return errors.New("base image name cannot be empty string")
 		}
 
-		return validateBaseImage(d.BaseImage)
+		return validateBaseImage(cfg.BaseImage)
 	}
 }
 
@@ -46,9 +46,9 @@ func withLanguageValidator() configValidator {
 }
 
 func withLibsValidator() configValidator {
-	return func(d AssignmentEnvConfig) error {
+	return func(cfg AssignmentEnvConfig) error {
 		// Library installation commands cannot be empty strings.
-		for s, libInstallCmd := range d.Deps.Libraries {
+		for s, libInstallCmd := range cfg.Deps.Libraries {
 			if s == "" || libInstallCmd.Cmd == "" {
 				return errors.New("library installation command cannot be empty string")
 			}
