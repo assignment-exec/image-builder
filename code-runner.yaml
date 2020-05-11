@@ -1,22 +1,21 @@
-config:
-  - from:
-      image: golang:latest
-  - env:
-      GOMODULE: on
-      GOFLAGS: -mod=vendor
-  - copy:
-      basedir: .
-      destdir: /code-runner
-  - workdir:
-      dir: /code-runner
-  - runCommand:
-      param: git clone https://github.com/assignment-exec/code-runner.git
-        && cd code-runner
-        && make
-  - port:
-      number: 8082
-  - cmd:
-      params:
-        - ./code-runner/code-runner-server
-        - -port
-        - 8082
+from:
+  image: golang:latest
+env:
+  GOMODULE: on
+  GOFLAGS: -mod=vendor
+copy:
+  basedir: .
+  destdir: /code-runner
+workdir:
+  dir: /code-runner
+runCommand:
+  param: git clone https://github.com/assignment-exec/code-runner.git
+    && cd code-runner
+    && make
+port:
+  number: 8082
+cmd:
+  params:
+    - ./code-runner/code-runner-server
+    - -port
+    - 8082

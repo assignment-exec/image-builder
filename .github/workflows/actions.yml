@@ -27,4 +27,7 @@ jobs:
       
     - name: Test Image Builder
       run: make test-verbose
+      env:
+        DOCKER_AUTH_USERNAME: assignmentexec
+        DOCKER_AUTH_PASSWORD: AssignmentExec@2020
       timeout-minutes: 2
