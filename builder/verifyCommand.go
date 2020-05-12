@@ -1,14 +1,14 @@
 package builder
 
 type verifyCommand struct {
-	assgnEnv *assignmentEnv
+	assgnEnv *assignmentEnvironment
 }
 
 func (cmd *verifyCommand) execute() error {
-	return cmd.assgnEnv.verifyAndWrite()
+	return cmd.assgnEnv.verifyAndWriteInstructions()
 }
 
 func (cmd *verifyCommand) undo() error {
-	//No operation.
+	// No operation.
 	return nil
 }

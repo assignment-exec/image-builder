@@ -5,7 +5,7 @@ import (
 )
 
 type publishCommand struct {
-	assgnEnv *assignmentEnv
+	assgnEnv *assignmentEnvironment
 }
 
 func (cmd *publishCommand) execute() error {
@@ -13,7 +13,7 @@ func (cmd *publishCommand) execute() error {
 }
 
 func (cmd *publishCommand) undo() error {
-	err := cmd.assgnEnv.undoPublish()
+	err := cmd.assgnEnv.undoBuild()
 	if err != nil {
 		return errors.Wrap(err, "error in undo publish operation")
 	}

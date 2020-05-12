@@ -1,7 +1,7 @@
 package builder
 
 type writeDockerfileCommand struct {
-	assgnEnv *assignmentEnv
+	assgnEnv *assignmentEnvironment
 }
 
 func (cmd *writeDockerfileCommand) execute() error {
@@ -9,6 +9,6 @@ func (cmd *writeDockerfileCommand) execute() error {
 }
 
 func (cmd *writeDockerfileCommand) undo() error {
-	cmd.assgnEnv.undoWrite()
+	cmd.assgnEnv.resetDockerfileData()
 	return nil
 }

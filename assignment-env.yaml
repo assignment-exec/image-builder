@@ -1,4 +1,4 @@
 baseImage: "assignmentexec/code-runner:1.0"
 dependencies:
-  lang: gcc
+  lang: gpp
   langVersion: 7

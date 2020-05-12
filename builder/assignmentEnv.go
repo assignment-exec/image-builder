@@ -18,35 +18,36 @@ import (
 	"strings"
 )
 
-type baseEnv interface {
-	verifyAndWrite() error
+type baseEnvImage interface {
+	verifyAndWriteInstructions() error
 	build() error
 	publish() error
-	undoWrite()
+	resetDockerfileData()
+	deleteDockerfile() error
 	undoBuild() error
-	undoPublish() error
 }
 
-type assignmentEnv struct {
+type assignmentEnvironment struct {
 	DockerfileData bytes.Buffer
 	ImgBuildConfig *imageBuildConfig
 	AssgnEnvConfig *configurations.AssignmentEnvConfig
+	ImageExists    bool
 }
 
-type assignmentImageOption func(*assignmentEnv) error
+type assignmentImageOption func(*assignmentEnvironment) error
 
-func newAssignmentImage(options ...assignmentImageOption) (*assignmentEnv, error) {
-	assgnEnv := &assignmentEnv{}
+func newAssignmentImage(options ...assignmentImageOption) (*assignmentEnvironment, error) {
+	assgnEnv := &assignmentEnvironment{}
 	for _, opt := range options {
 		if err := opt(assgnEnv); err != nil {
-			return nil, errors.Wrap(err, "failed to create assignmentEnv instance")
+			return nil, errors.Wrap(err, "failed to create assignmentEnvironment instance")
 		}
 	}
 	return assgnEnv, nil
 }
 
 func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentImageOption {
-	return func(assgnEnv *assignmentEnv) error {
+	return func(assgnEnv *assignmentEnvironment) error {
 		if imgBuildCfg == nil {
 			return errors.New("image build config instance not provided")
 		}
@@ -57,7 +58,7 @@ func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentImageOption {
 }
 
 func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentImageOption {
-	return func(assgnEnv *assignmentEnv) error {
+	return func(assgnEnv *assignmentEnvironment) error {
 		if assignCfgs == nil {
 			return errors.New("assignment assignCfgs not provided")
 		}
@@ -67,7 +68,7 @@ func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignme
 	}
 }
 
-func (assgnEnv *assignmentEnv) verifyAndWrite() error {
+func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 
 	// Verify whether language image is present in registry.
 	if err := assgnEnv.verifyLanguage(); err != nil {
@@ -79,10 +80,14 @@ func (assgnEnv *assignmentEnv) verifyAndWrite() error {
 			assgnEnv.writeFromDependencies()
 		}
 	}
+
+	if assgnEnv.DockerfileData.Len() <= 0 {
+		assgnEnv.ImageExists = true
+	}
 	return nil
 }
 
-func (assgnEnv *assignmentEnv) verifyLanguage() error {
+func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	// Check whether the language image is available on docker hub.
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -99,22 +104,21 @@ func (assgnEnv *assignmentEnv) verifyLanguage() error {
 
 	if err != nil {
 		return err
-	} else {
-		found := false
-		for _, result := range resp {
-			if strings.Contains(assgnEnv.ImgBuildConfig.imageTag, result.Name) {
-				found = true
-			}
+	}
+	found = false
+	for _, result := range resp {
+		if strings.Contains(assgnEnv.ImgBuildConfig.imageTag, result.Name) {
+			found = true
 		}
-		if !found {
-			return errors.New("code-runner base image not found on docker registry")
-		}
+	}
+	if !found {
+		return errors.New("code-runner base image not found on docker registry")
 	}
 
 	return nil
 }
 
-func (assgnEnv *assignmentEnv) writeFromBaseImage() {
+func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
 	assgnEnv.DockerfileData.WriteString(assgnEnv.AssgnEnvConfig.WriteInstruction())
 	// Append library names to image tag.
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
@@ -122,10 +126,14 @@ func (assgnEnv *assignmentEnv) writeFromBaseImage() {
 	}
 }
 
-func (assgnEnv *assignmentEnv) writeFromDependencies() {
+func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 	buf := &bytes.Buffer{}
 	from := fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag)
+	copyInst := fmt.Sprintf("COPY . /" + constants.CodeRunnerDir)
 	buf.WriteString(from)
+	buf.WriteString("\n")
+
+	buf.WriteString(copyInst)
 	buf.WriteString("\n")
 
 	for lib, installCmd := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
@@ -139,9 +147,9 @@ func (assgnEnv *assignmentEnv) writeFromDependencies() {
 	assgnEnv.DockerfileData.WriteString(buf.String())
 }
 
-func (assgnEnv *assignmentEnv) writeDockerfile() error {
-	if assgnEnv.DockerfileData.Len() > 0 {
-		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerFilepath)
+func (assgnEnv *assignmentEnvironment) writeDockerfile() error {
+	if !assgnEnv.ImageExists {
+		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerfileLoc)
 		defer func() {
 			err = file.Close()
 			if err != nil {
@@ -158,9 +166,9 @@ func (assgnEnv *assignmentEnv) writeDockerfile() error {
 	return nil
 }
 
-func (assgnEnv *assignmentEnv) build() error {
+func (assgnEnv *assignmentEnvironment) build() error {
 
-	if assgnEnv.DockerfileData.Len() > 0 {
+	if !assgnEnv.ImageExists {
 		backgroundContext := context.Background()
 		dockerClient, err := client.NewEnvClient()
 		if err != nil {
@@ -170,7 +178,7 @@ func (assgnEnv *assignmentEnv) build() error {
 		// Create a build context tar for the image.
 		// build Context is the current working directory and where the Dockerfile is assumed to be located.
 		// [cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/].
-		dockerFilepath := assgnEnv.ImgBuildConfig.dockerFilepath
+		dockerfileLoc := assgnEnv.ImgBuildConfig.dockerfileLoc
 
 		dockerBuildContext, err := assgnEnv.ImgBuildConfig.getDockerBuildContextTar()
 		if err != nil {
@@ -181,13 +189,13 @@ func (assgnEnv *assignmentEnv) build() error {
 			backgroundContext,
 			dockerBuildContext,
 			types.ImageBuildOptions{
-				Dockerfile: dockerFilepath,
+				Dockerfile: dockerfileLoc,
 				Tags:       []string{assgnEnv.ImgBuildConfig.imageTag}})
 		if err != nil {
 			return errors.Wrap(err, "error in building docker image")
 		}
 		defer func() {
-			err = response.Body.Close()
+			err := response.Body.Close()
 			if err != nil {
 				log.Println(err)
 				return
@@ -198,20 +206,21 @@ func (assgnEnv *assignmentEnv) build() error {
 		if err != nil {
 			return errors.Wrap(err, "error in reading image build response")
 		}
+
+		return err
+	} else {
+		return assgnEnv.pullImage()
 	}
-	return nil
 }
 
-func (assgnEnv *assignmentEnv) publish() error {
-	if assgnEnv.DockerfileData.Len() <= 0 {
-		return assgnEnv.pullImage()
-	} else if assgnEnv.ImgBuildConfig.publishImage {
+func (assgnEnv *assignmentEnvironment) publish() error {
+	if !assgnEnv.ImageExists && assgnEnv.ImgBuildConfig.publishImage {
 		return assgnEnv.pushImage()
 	}
 	return nil
 }
 
-func (assgnEnv *assignmentEnv) pullImage() error {
+func (assgnEnv *assignmentEnvironment) pullImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
 	if err != nil {
@@ -227,8 +236,8 @@ func (assgnEnv *assignmentEnv) pullImage() error {
 	}
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
-
-	resp, err := dockerClient.ImagePull(backgroundContext, assgnEnv.ImgBuildConfig.imageTag, types.ImagePullOptions{
+	imageString := fmt.Sprintf("%s/%s", constants.DockerIO, assgnEnv.ImgBuildConfig.imageTag)
+	resp, err := dockerClient.ImagePull(backgroundContext, imageString, types.ImagePullOptions{
 		RegistryAuth: authStr,
 	})
 
@@ -250,7 +259,7 @@ func (assgnEnv *assignmentEnv) pullImage() error {
 	return nil
 
 }
-func (assgnEnv *assignmentEnv) pushImage() error {
+func (assgnEnv *assignmentEnvironment) pushImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
 	if err != nil {
@@ -290,17 +299,21 @@ func (assgnEnv *assignmentEnv) pushImage() error {
 	return nil
 }
 
-func (assgnEnv *assignmentEnv) undoWrite() {
-	// Clear the dockerfile data bytes.
+func (assgnEnv *assignmentEnvironment) resetDockerfileData() {
+	// Clear the dockerfile data.
 	assgnEnv.DockerfileData.Reset()
 }
 
-func (assgnEnv *assignmentEnv) undoBuild() error {
+func (assgnEnv *assignmentEnvironment) deleteDockerfile() error {
 	// Delete the created Dockerfile.
-	return os.Remove(assgnEnv.ImgBuildConfig.dockerFilepath)
+	_, err := os.Stat(assgnEnv.ImgBuildConfig.dockerfileLoc)
+	if err == nil {
+		return os.Remove(assgnEnv.ImgBuildConfig.dockerfileLoc)
+	}
+	return nil
 }
 
-func (assgnEnv *assignmentEnv) undoPublish() error {
+func (assgnEnv *assignmentEnvironment) undoBuild() error {
 	// Delete the built image.
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()

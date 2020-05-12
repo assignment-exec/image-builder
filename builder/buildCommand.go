@@ -5,7 +5,7 @@ import (
 )
 
 type buildCommand struct {
-	assgnEnv *assignmentEnv
+	assgnEnv *assignmentEnvironment
 }
 
 func (cmd *buildCommand) execute() error {
@@ -13,7 +13,7 @@ func (cmd *buildCommand) execute() error {
 }
 
 func (cmd *buildCommand) undo() error {
-	if err := cmd.assgnEnv.undoBuild(); err != nil {
+	if err := cmd.assgnEnv.deleteDockerfile(); err != nil {
 		return errors.Wrap(err, "error in undo build operation")
 	}
 	return nil

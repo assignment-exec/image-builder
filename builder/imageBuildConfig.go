@@ -15,10 +15,10 @@ type dockerAuthData struct {
 }
 
 type imageBuildConfig struct {
-	authData       *dockerAuthData
-	imageTag       string
-	dockerFilepath string
-	publishImage   bool
+	authData      *dockerAuthData
+	imageTag      string
+	dockerfileLoc string
+	publishImage  bool
 }
 
 type imageBuildConfigOption func(*imageBuildConfig) error
@@ -33,13 +33,13 @@ func newImageBuildConfig(options ...imageBuildConfigOption) (*imageBuildConfig, 
 	return imgBuildCfg, nil
 }
 
-func withDockerfileName(filename string) imageBuildConfigOption {
+func withDockerfileLocation(fileLoc string) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
-		// Validate filename and raise error if validation fails.
-		if filename == "" {
+		// Validate fileLoc and raise error if validation fails.
+		if fileLoc == "" {
 			return errors.New("dockerfile name not provided")
 		}
-		imgBuildCfg.dockerFilepath = filename
+		imgBuildCfg.dockerfileLoc = fileLoc
 		return nil
 
 	}
@@ -91,11 +91,11 @@ func getAuthData() (*dockerAuthData, error) {
 
 // Get Docker build Context Tar Reader for building image.
 func (imgBuildCfg imageBuildConfig) getDockerBuildContextTar() (*os.File, error) {
-	dockerFileReader, err := os.Open(imgBuildCfg.dockerFilepath)
+	dockerFileReader, err := os.Open(imgBuildCfg.dockerfileLoc)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in opening dockerfile for build context")
 	}
-	fileInfo, err := os.Stat(imgBuildCfg.dockerFilepath)
+	fileInfo, err := os.Stat(imgBuildCfg.dockerfileLoc)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in verifying dockerfile path")
 	}
@@ -110,7 +110,7 @@ func (imgBuildCfg imageBuildConfig) getDockerBuildContextTar() (*os.File, error)
 		return nil, errors.Wrap(err, "error in adding installation script to build context tar")
 	}
 
-	err = buildContextTar.Add(imgBuildCfg.dockerFilepath, dockerFileReader, fileInfo)
+	err = buildContextTar.Add(imgBuildCfg.dockerfileLoc, dockerFileReader, fileInfo)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in adding dockerfile to build context tar")
 	}

@@ -32,14 +32,16 @@ func validateLang(langName string, langVersion string) error {
 func validateBaseImage(baseImage string) error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
-
+	if err != nil {
+		return err
+	}
 	username, found := os.LookupEnv(environment.DockerAuthUsername)
 	if !found {
 		return errors.New("environment variable for username not set")
 	}
 
 	resp, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
-		Limit: 10})
+		Limit: 25})
 	if err != nil {
 		return err
 	} else {

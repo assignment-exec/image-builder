@@ -2,6 +2,7 @@ package configurations
 
 import (
 	"assignment-exec/image-builder/constants"
+	"assignment-exec/image-builder/environment"
 	"assignment-exec/image-builder/utilities/validation"
 	"bytes"
 	"fmt"
@@ -47,6 +48,8 @@ func (config AssignmentEnvConfig) WriteInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString("FROM " + config.BaseImage)
 	buf.WriteString("\n")
+	buf.WriteString("COPY . /" + constants.CodeRunnerDir)
+	buf.WriteString("\n")
 	buf.WriteString(config.Deps.WriteInstruction() + "\n")
 	return buf.String()
 }
@@ -59,6 +62,8 @@ type Dependencies struct {
 func (langDep Dependencies) WriteInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString(langDep.Language.WriteInstruction())
+	buf.WriteString("\n")
+	buf.WriteString("ENV " + environment.LanguageEnvKey + " " + langDep.Language.Name)
 	buf.WriteString("\n")
 	for lib, installCmd := range langDep.Libraries {
 		buf.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)

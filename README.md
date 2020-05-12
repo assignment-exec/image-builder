@@ -60,11 +60,11 @@ make
 ```
 Use the -h option to get information about the command-line options.
 - Use the `-assignmentEnvConfig` option to specify the path to assignment environment config file.
-- Use the `-dockerfile` option to specify the Dockerfile name to be created.
+- Use the `-dockerfileLoc` option to specify the Dockerfile location to be created.
 - Use the `-publishImage` option to specify whether to publish image to docker hub.
 Below is an example to run the source code.
 ```commandline
-./image-builder -assignmentEnvConfig <path_to_config_file> -dockerfile <dockerfile_name> -publishImage <true/false>
+./image-builder -assignmentEnvConfig <path_to_config_file> -dockerfileLoc <dockerfile_location> -publishImage <true/false>
 ```
 ## Run Docker Image for Assignment Environment
 Following is the command used to run the docker image for assignment environment.

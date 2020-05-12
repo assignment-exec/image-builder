@@ -24,7 +24,7 @@ func NewBuildManager(options ...BuildManagerOption) (*BuildManager, error) {
 	return b, nil
 }
 
-func WithCommands(assgnEnv *assignmentEnv) BuildManagerOption {
+func WithCommands(assgnEnv *assignmentEnvironment) BuildManagerOption {
 	return func(b *BuildManager) error {
 
 		var commandList []command
@@ -34,13 +34,13 @@ func WithCommands(assgnEnv *assignmentEnv) BuildManagerOption {
 			&buildCommand{assgnEnv: assgnEnv},
 			&publishCommand{assgnEnv: assgnEnv})
 
+		b.commands = commandList
 		return nil
 	}
 }
 
 func (builder *BuildManager) ExecuteCommands() error {
 	for _, cmd := range builder.commands {
-
 		builder.undoCommands.push(cmd)
 
 		if err := cmd.execute(); err != nil {
@@ -54,7 +54,9 @@ func (builder *BuildManager) ExecuteCommands() error {
 }
 
 func (builder *BuildManager) UndoCommands() error {
+
 	for !builder.undoCommands.isEmpty() {
+		fmt.Println("Undoing", len(*builder.undoCommands))
 		undoCmd := builder.undoCommands.pop()
 		if err := undoCmd.undo(); err != nil {
 			return err
@@ -63,7 +65,7 @@ func (builder *BuildManager) UndoCommands() error {
 	return nil
 }
 
-func GetConfigurations(publishImage bool, configFilename string, dockerFilename string) (*assignmentEnv, error) {
+func GetConfigurations(publishImage bool, configFilename string, dockerfileLoc string) (*assignmentEnvironment, error) {
 	config, err := configurations.GetAssignmentEnvConfig(configFilename)
 	if err != nil {
 		return nil, err
@@ -79,7 +81,7 @@ func GetConfigurations(publishImage bool, configFilename string, dockerFilename 
 	imgBuilder, err := newImageBuildConfig(
 		withDockerAuthData(authData),
 		withImageTag(imageTag),
-		withDockerfileName(dockerFilename),
+		withDockerfileLocation(dockerfileLoc),
 		withPublishImageFlag(publishImage))
 
 	if err != nil {
