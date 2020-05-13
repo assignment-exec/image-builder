@@ -65,8 +65,8 @@ func (langDep Dependencies) WriteInstruction() string {
 	buf.WriteString("\n")
 	buf.WriteString("ENV " + environment.LanguageEnvKey + " " + langDep.Language.Name)
 	buf.WriteString("\n")
-	for lib, installCmd := range langDep.Libraries {
-		buf.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)
+	for _, installCmd := range langDep.Libraries {
+		buf.WriteString("RUN " + installCmd.WriteInstruction())
 		buf.WriteString("\n")
 	}
 	return buf.String()

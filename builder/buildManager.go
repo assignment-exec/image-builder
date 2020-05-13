@@ -56,7 +56,6 @@ func (builder *BuildManager) ExecuteCommands() error {
 func (builder *BuildManager) UndoCommands() error {
 
 	for !builder.undoCommands.isEmpty() {
-		fmt.Println("Undoing", len(*builder.undoCommands))
 		undoCmd := builder.undoCommands.pop()
 		if err := undoCmd.undo(); err != nil {
 			return err

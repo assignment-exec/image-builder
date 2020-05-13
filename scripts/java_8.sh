@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Installation commands for java 8
+#[cite: https://linuxize.com/post/install-java-on-debian-10/]
 apt update -y
 apt install -y apt-transport-https
 apt install -y ca-certificates

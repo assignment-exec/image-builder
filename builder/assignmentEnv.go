@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -149,6 +150,7 @@ func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 
 func (assgnEnv *assignmentEnvironment) writeDockerfile() error {
 	if !assgnEnv.ImageExists {
+
 		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerfileLoc)
 		defer func() {
 			err = file.Close()
@@ -157,6 +159,7 @@ func (assgnEnv *assignmentEnvironment) writeDockerfile() error {
 				return
 			}
 		}()
+
 		if err != nil {
 			return err
 		}
@@ -178,7 +181,7 @@ func (assgnEnv *assignmentEnvironment) build() error {
 		// Create a build context tar for the image.
 		// build Context is the current working directory and where the Dockerfile is assumed to be located.
 		// [cite: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/].
-		dockerfileLoc := assgnEnv.ImgBuildConfig.dockerfileLoc
+		dockerfileLoc := filepath.Base(assgnEnv.ImgBuildConfig.dockerfileLoc)
 
 		dockerBuildContext, err := assgnEnv.ImgBuildConfig.getDockerBuildContextTar()
 		if err != nil {
