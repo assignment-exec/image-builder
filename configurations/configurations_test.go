@@ -8,7 +8,9 @@ import (
 )
 
 var expectedAssgnEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
+COPY . /code-runner
 RUN ./scripts/gcc_7.sh
+ENV SUPPORTED_LANGUAGE gcc
 
 `
 

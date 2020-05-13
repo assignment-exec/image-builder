@@ -4,14 +4,13 @@ import (
 	"assignment-exec/image-builder/constants"
 	"assignment-exec/image-builder/environment"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func validateLang(langName string, langVersion string) error {
@@ -33,32 +32,28 @@ func validateLang(langName string, langVersion string) error {
 func validateBaseImage(baseImage string) error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
-
+	if err != nil {
+		return err
+	}
 	username, found := os.LookupEnv(environment.DockerAuthUsername)
 	if !found {
 		return errors.New("environment variable for username not set")
 	}
-	password, found := os.LookupEnv(environment.DockerAuthPassword)
-	if !found {
-		return errors.New("environment variable for password not set")
-	}
-	authConfig := types.AuthConfig{
-		Username: username,
-		Password: password,
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	if err != nil {
-		return errors.Wrap(err, "error in encoding authConfig")
-	}
 
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
-
-	_, err = dockerClient.ImageSearch(backgroundContext, baseImage, types.ImageSearchOptions{
-		RegistryAuth: authStr,
-		Limit:        10})
-
+	resp, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
+		Limit: 25})
 	if err != nil {
 		return err
+	} else {
+		found := false
+		for _, result := range resp {
+			if strings.Contains(baseImage, result.Name) {
+				found = true
+			}
+		}
+		if !found {
+			return errors.New("code-runner base image not found on docker registry")
+		}
 	}
 
 	return nil
