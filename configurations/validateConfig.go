@@ -35,24 +35,24 @@ func validateBaseImage(baseImage string) error {
 	if err != nil {
 		return err
 	}
-	username, found := os.LookupEnv(environment.DockerAuthUsername)
-	if !found {
+	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
+	if !hasFound {
 		return errors.New("environment variable for username not set")
 	}
 
-	resp, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
+	response, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
 		Limit: 25})
 	if err != nil {
 		return err
 	} else {
-		found := false
-		for _, result := range resp {
+		hasFound := false
+		for _, result := range response {
 			if strings.Contains(baseImage, result.Name) {
-				found = true
+				hasFound = true
 			}
 		}
-		if !found {
-			return errors.New("code-runner base image not found on docker registry")
+		if !hasFound {
+			return errors.New("code-runner base image not found on docker hub")
 		}
 	}
 

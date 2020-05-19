@@ -89,9 +89,9 @@ func (langInfo LanguageInfo) WriteInstruction() string {
 	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
-func GetAssignmentEnvConfig(configFilename string) (*AssignmentEnvConfig, error) {
+func GetAssignmentEnvConfig(configFilepath string) (*AssignmentEnvConfig, error) {
 
-	yamlFile, err := ioutil.ReadFile(configFilename)
+	yamlFile, err := ioutil.ReadFile(configFilepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read log config file")
 	}
