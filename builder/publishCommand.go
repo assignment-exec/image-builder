@@ -1,3 +1,6 @@
+// Package builder implements routines to write dockerfile for assignment environment,
+// build its docker image and publish it to docker hub. It uses command pattern to
+// perform all operations and perform undo operations when any error is encountered.
 package builder
 
 import (
@@ -6,10 +9,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// publishCommand struct type holds assignmentEnvironment instance
+// which is required to perform image publish operation.
 type publishCommand struct {
 	assgnEnv *assignmentEnvironment
 }
 
+// execute invokes the publish function to push the image to docker hub.
 func (cmd *publishCommand) execute() error {
 
 	if err := cmd.assgnEnv.publish(); err != nil {
@@ -22,6 +28,8 @@ func (cmd *publishCommand) execute() error {
 	return nil
 }
 
+// undo invokes undoBuild function to remove the locally built image
+// if any error is encountered while publishing the image.
 func (cmd *publishCommand) undo() error {
 	err := cmd.assgnEnv.undoBuild()
 	if err != nil {

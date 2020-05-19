@@ -1,9 +1,14 @@
+// Package validation contains utilities to help run validators.
 package validation
 
 import "github.com/pkg/errors"
 
+// Validator is a function interface that performs any kind of validation.
 type Validator func() error
 
+// Validate validates one or more validators.
+// It returns any error encountered wrapped around
+// with the base error message.
 func Validate(errorMsg string, validators ...Validator) error {
 	for _, v := range validators {
 		if err := v(); err != nil {
