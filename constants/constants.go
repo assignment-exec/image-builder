@@ -1,3 +1,4 @@
+// Package constants provide list of constant values.
 package constants
 
 const InstallationScriptsDir = "scripts"

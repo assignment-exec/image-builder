@@ -1,3 +1,4 @@
+// Package environment provides list of environment variable names.
 package environment
 
 var DockerAuthUsername = "DOCKER_AUTH_USERNAME"
