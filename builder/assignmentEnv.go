@@ -1,3 +1,6 @@
+// Package builder provides primitives to write dockerfile for assignment environment,
+// build its docker image and publish it to docker hub. It uses command pattern to
+// perform all operations and perform undo operations when any error is encountered.
 package builder
 
 import (
@@ -19,6 +22,9 @@ import (
 	"strings"
 )
 
+// baseEnvImage interface type represents functions for
+// performing different operations in order to build assignment
+// environment image.
 type baseEnvImage interface {
 	verifyAndWriteInstructions() error
 	build() error
@@ -28,6 +34,8 @@ type baseEnvImage interface {
 	undoBuild() error
 }
 
+// assignmentEnvironment struct type holds parameters required
+// to build assignment environment image.
 type assignmentEnvironment struct {
 	DockerfileInstructions bytes.Buffer
 	ImgBuildConfig         *imageBuildConfig
@@ -35,8 +43,13 @@ type assignmentEnvironment struct {
 	IsImagePresent         bool
 }
 
+// assignmentEnvironmentOption is a function interface that
+// is supplied as different options while creating new instance of
+// 'assignmentEnvironment' type. This function returns any error encountered.
 type assignmentEnvironmentOption func(*assignmentEnvironment) error
 
+// newAssignmentEnvironment takes one or more options and
+// returns new instance of assignmentEnvironment.
 func newAssignmentEnvironment(options ...assignmentEnvironmentOption) (*assignmentEnvironment, error) {
 	assgnEnv := &assignmentEnvironment{}
 	for _, opt := range options {
@@ -47,6 +60,8 @@ func newAssignmentEnvironment(options ...assignmentEnvironmentOption) (*assignme
 	return assgnEnv, nil
 }
 
+// withImageBuildCfg takes imageBuildConfig as a parameter returns 'assignmentEnvironmentOption' function.
+// This returned function in turn sets the imageBuildConfig of assignmentEnvironment.
 func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if imgBuildCfg == nil {
@@ -58,6 +73,8 @@ func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentEnvironmentOptio
 	}
 }
 
+// withAssgnEnvConfig takes AssignmentEnvConfig as a parameter returns 'assignmentEnvironmentOption' function.
+// This returned function in turn sets the AssignmentEnvConfig of assignmentEnvironment.
 func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if assignCfgs == nil {
@@ -69,6 +86,10 @@ func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignme
 	}
 }
 
+// verifyAndWriteInstructions checks whether the provided language image
+// is already present in docker hub and accordingly writes the dockerfile
+// from either base image or from the existing language image.
+// It returns any error encountered.
 func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 
 	// Verify whether language image is present in registry.
@@ -88,6 +109,8 @@ func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 	return nil
 }
 
+// verifyLanguage searches the docker image for the given language of docker hub.
+// It uses ImageSearch function of docker client and returns error if image is not found.
 func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	// Check whether the language image is available on docker hub.
 	backgroundContext := context.Background()
@@ -119,6 +142,9 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	return nil
 }
 
+// writeFromBaseImage writes the docker instructions to bytes buffer
+// in 'assignmentEnvironment' instance staring from the base code runner image.
+// Which is then followed by the required language and its dependencies.
 func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
 	assgnEnv.DockerfileInstructions.WriteString(assgnEnv.AssgnEnvConfig.WriteInstruction())
 	// Append library names to image tag.
@@ -127,6 +153,9 @@ func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
 	}
 }
 
+// writeFromDependencies writes the docker instructions to bytes buffer
+// in 'assignmentEnvironment' instance staring from the respective language image.
+// Which is then followed by the language dependencies.
 func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 	instructionsBuffer := &bytes.Buffer{}
 	fromInstruction := fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag)
@@ -148,6 +177,8 @@ func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 	assgnEnv.DockerfileInstructions.WriteString(instructionsBuffer.String())
 }
 
+// writeToDockerfile creates a Dockerfile at the specified location and writes
+// the instructions bytes buffer to it. It returns any error encountered.
 func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
 	if !assgnEnv.IsImagePresent {
 
@@ -169,6 +200,10 @@ func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
 	return nil
 }
 
+// build builds a docker image for the given language using
+// the 'ImageBuild' function of docker client. If the image
+// is already present, then it simply pulls the image. It
+// returns any error encountered.
 func (assgnEnv *assignmentEnvironment) build() error {
 
 	if !assgnEnv.IsImagePresent {
@@ -216,6 +251,9 @@ func (assgnEnv *assignmentEnvironment) build() error {
 	}
 }
 
+// publish pushes the built image to docker hub if it is not already present
+// and if publish flag is set. It returns any error encountered during image
+// push operation.
 func (assgnEnv *assignmentEnvironment) publish() error {
 	if !assgnEnv.IsImagePresent && assgnEnv.ImgBuildConfig.isPublish {
 		return assgnEnv.pushImage()
@@ -223,6 +261,9 @@ func (assgnEnv *assignmentEnvironment) publish() error {
 	return nil
 }
 
+// pullImage pulls the required language image from docker hub
+// using the 'ImagePull' of docker client.
+// It returns any error encountered.
 func (assgnEnv *assignmentEnvironment) pullImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -262,6 +303,9 @@ func (assgnEnv *assignmentEnvironment) pullImage() error {
 	return nil
 
 }
+
+// pushImage pushes image to docker hub using the 'ImagePush' function
+// of docker client. It returns any error encountered.
 func (assgnEnv *assignmentEnvironment) pushImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
@@ -302,11 +346,14 @@ func (assgnEnv *assignmentEnvironment) pushImage() error {
 	return nil
 }
 
+// resetDockerfileData resets the dockerfile instructions buffer.
 func (assgnEnv *assignmentEnvironment) resetDockerfileData() {
 	// Clear the dockerfile data.
 	assgnEnv.DockerfileInstructions.Reset()
 }
 
+// deleteDockerfile deletes the dockerfile that was created
+// while building the assignment environment image.
 func (assgnEnv *assignmentEnvironment) deleteDockerfile() error {
 	// Delete the created Dockerfile.
 	_, err := os.Stat(assgnEnv.ImgBuildConfig.dockerfileLoc)
@@ -316,6 +363,7 @@ func (assgnEnv *assignmentEnvironment) deleteDockerfile() error {
 	return nil
 }
 
+// undoBuild removes the assignment environment image that was built locally.
 func (assgnEnv *assignmentEnvironment) undoBuild() error {
 	// Delete the built image.
 	backgroundContext := context.Background()

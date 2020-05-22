@@ -1,3 +1,6 @@
+// Package configurations provides primitives to read and store the
+// assignment environment configuration yaml file, get the docker instructions
+// in the specific format for every configuration.
 package configurations
 
 import (
@@ -11,11 +14,16 @@ import (
 	"io/ioutil"
 )
 
+// AssignmentEnvConfig struct type holds the base image and
+// dependencies level of the configuration yaml.
 type AssignmentEnvConfig struct {
 	BaseImage string       `yaml:"baseImage"`
 	Deps      Dependencies `yaml:"dependencies"`
 }
 
+// UnmarshalYAML unmarshals the config yaml, validates the data
+// and stores the configurations to `AssignmentEnvConfig`.
+//It returns any error encountered while unmarshaling the file.
 func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	type tempAssignmentEnvConfig struct {
@@ -28,7 +36,7 @@ func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) err
 		return errors.Wrap(err, "error in unmarshaling assignment environment configuration")
 	}
 
-	// Validate the configuration data.
+	// Validates base image, language and the library dependencies.
 	err := validation.Validate("error in configuration",
 		ValidatorForConfig(AssignmentEnvConfig(*temp),
 			withBaseImageValidator(),
@@ -44,6 +52,8 @@ func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) err
 	return nil
 }
 
+// WriteInstruction returns the docker instructions for the full configuration
+// as a single string.
 func (config AssignmentEnvConfig) WriteInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString("FROM " + config.BaseImage)
@@ -54,11 +64,15 @@ func (config AssignmentEnvConfig) WriteInstruction() string {
 	return buf.String()
 }
 
+// Dependencies struct type holds the language information
+// and library names and their installation command level of the configuration yaml.
 type Dependencies struct {
 	Language  LanguageInfo                  `yaml:",inline"`
 	Libraries map[string]LibInstallationCmd `yaml:"lib"`
 }
 
+// WriteInstruction returns the docker instructions for the dependencies
+// as a single string.
 func (langDep Dependencies) WriteInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString(langDep.Language.WriteInstruction())
@@ -72,23 +86,33 @@ func (langDep Dependencies) WriteInstruction() string {
 	return buf.String()
 }
 
+// LibInstallationCmd struct type holds the installation command
+// for the respective library name.
 type LibInstallationCmd struct {
 	Cmd string `yaml:"cmd"`
 }
 
+// WriteInstruction returns the library installation command.
 func (libCmd LibInstallationCmd) WriteInstruction() string {
 	return libCmd.Cmd
 }
 
+// LanguageInfo struct type holds name and version of language.
 type LanguageInfo struct {
 	Name    string `yaml:"lang"`
 	Version string `yaml:"langVersion"`
 }
 
+// WriteInstruction returns the docker instruction for the language
+// as a single string. The instruction includes running the installation
+// script for the given language.
 func (langInfo LanguageInfo) WriteInstruction() string {
 	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
+// GetAssignmentEnvConfig reads the yaml config file and unmarshals it into
+// `AssignmentEnvConfig` struct. It returns the `AssignmentEnvConfig` instance
+// and any error encountered.
 func GetAssignmentEnvConfig(configFilepath string) (*AssignmentEnvConfig, error) {
 
 	yamlFile, err := ioutil.ReadFile(configFilepath)
