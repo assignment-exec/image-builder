@@ -120,32 +120,42 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 }
 
 func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
-	assgnEnv.DockerfileInstructions.WriteString(assgnEnv.AssgnEnvConfig.GetInstruction())
-	// Append library names to image tag.
+	var instructions []string
+	instructions = append(instructions, assgnEnv.AssgnEnvConfig.GetInstruction())
+
+	var libraryNames []string
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		// Append library names to an array.
+		libraryNames = append(libraryNames, lib)
 	}
+
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
 func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
-	instructionsBuffer := &bytes.Buffer{}
-	fromInstruction := fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag)
-	copyInstruction := fmt.Sprintf("COPY . /" + constants.CodeRunnerDir)
-	instructionsBuffer.WriteString(fromInstruction)
-	instructionsBuffer.WriteString("\n")
+	var instructions []string
 
-	instructionsBuffer.WriteString(copyInstruction)
-	instructionsBuffer.WriteString("\n")
+	// FROM instruction.
+	instructions = append(instructions, fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag))
+	// COPY instruction.
+	instructions = append(instructions, fmt.Sprintf("COPY . /"+constants.CodeRunnerDir))
 
+	var libraryNames []string
 	for lib, installCmd := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		// Append library names to image tag.
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		// Append library names to an array.
+		libraryNames = append(libraryNames, lib)
 
-		instructionsBuffer.WriteString("RUN " + installCmd.GetInstruction() + " " + lib)
-		instructionsBuffer.WriteString("\n")
+		// RUN instruction.
+		instructions = append(instructions, "RUN "+installCmd.GetInstruction()+" "+lib)
 	}
 
-	assgnEnv.DockerfileInstructions.WriteString(instructionsBuffer.String())
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
 func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
