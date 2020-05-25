@@ -18,7 +18,7 @@ type imageBuildConfig struct {
 	authData      *dockerAuthData
 	imageTag      string
 	dockerfileLoc string
-	isPublish     bool
+	publishImage  bool
 }
 
 type imageBuildConfigOption func(*imageBuildConfig) error
@@ -69,7 +69,7 @@ func withImageTag(tag string) imageBuildConfigOption {
 
 func withPublishImageFlag(isPublish bool) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
-		imgBuildCfg.isPublish = isPublish
+		imgBuildCfg.publishImage = isPublish
 		return nil
 	}
 }

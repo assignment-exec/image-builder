@@ -32,7 +32,7 @@ type assignmentEnvironment struct {
 	DockerfileInstructions bytes.Buffer
 	ImgBuildConfig         *imageBuildConfig
 	AssgnEnvConfig         *configurations.AssignmentEnvConfig
-	IsImagePresent         bool
+	ImageExists            bool
 }
 
 type assignmentEnvironmentOption func(*assignmentEnvironment) error
@@ -61,7 +61,7 @@ func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentEnvironmentOptio
 func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if assignCfgs == nil {
-			return errors.New("assignment assignCfgs not provided")
+			return errors.New("assignment environment configurations not provided")
 		}
 		assgnEnv.AssgnEnvConfig = assignCfgs
 		return nil
@@ -83,7 +83,7 @@ func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 	}
 
 	if assgnEnv.DockerfileInstructions.Len() <= 0 {
-		assgnEnv.IsImagePresent = true
+		assgnEnv.ImageExists = true
 	}
 	return nil
 }
@@ -95,8 +95,8 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	if err != nil {
 		return err
 	}
-	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
-	if !hasFound {
+	username, usernameFound := os.LookupEnv(environment.DockerAuthUsername)
+	if !usernameFound {
 		return errors.New("environment variable for username not set")
 	}
 
@@ -106,21 +106,21 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	if err != nil {
 		return err
 	}
-	hasFound = false
+	langImageFound := false
 	for _, result := range response {
 		if strings.Contains(assgnEnv.ImgBuildConfig.imageTag, result.Name) {
-			hasFound = true
+			langImageFound = true
 		}
 	}
-	if !hasFound {
-		return errors.New("code-runner base image not found on docker registry")
+	if !langImageFound {
+		return errors.New("language image not found on docker hub")
 	}
 
 	return nil
 }
 
 func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
-	assgnEnv.DockerfileInstructions.WriteString(assgnEnv.AssgnEnvConfig.WriteInstruction())
+	assgnEnv.DockerfileInstructions.WriteString(assgnEnv.AssgnEnvConfig.GetInstruction())
 	// Append library names to image tag.
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
 		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
@@ -141,7 +141,7 @@ func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 		// Append library names to image tag.
 		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
 
-		instructionsBuffer.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)
+		instructionsBuffer.WriteString("RUN " + installCmd.GetInstruction() + " " + lib)
 		instructionsBuffer.WriteString("\n")
 	}
 
@@ -149,7 +149,7 @@ func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 }
 
 func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
-	if !assgnEnv.IsImagePresent {
+	if !assgnEnv.ImageExists {
 
 		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerfileLoc)
 		defer func() {
@@ -171,7 +171,7 @@ func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
 
 func (assgnEnv *assignmentEnvironment) build() error {
 
-	if !assgnEnv.IsImagePresent {
+	if !assgnEnv.ImageExists {
 		backgroundContext := context.Background()
 		dockerClient, err := client.NewEnvClient()
 		if err != nil {
@@ -217,7 +217,7 @@ func (assgnEnv *assignmentEnvironment) build() error {
 }
 
 func (assgnEnv *assignmentEnvironment) publish() error {
-	if !assgnEnv.IsImagePresent && assgnEnv.ImgBuildConfig.isPublish {
+	if !assgnEnv.ImageExists && assgnEnv.ImgBuildConfig.publishImage {
 		return assgnEnv.pushImage()
 	}
 	return nil
