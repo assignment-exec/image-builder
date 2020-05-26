@@ -1,4 +1,4 @@
-// Package configurations provides primitives to read and store the
+// Package configurations implements routines to read and store the
 // assignment environment configuration yaml file, get the docker instructions
 // in the specific format for every configuration.
 package configurations

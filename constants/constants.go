@@ -1,4 +1,6 @@
-// Package constants provide list of constant values.
+// Package constants provide list of constant values
+// required for building and publishing the assignment
+// environment image.
 package constants
 
 const InstallationScriptsDir = "scripts"
