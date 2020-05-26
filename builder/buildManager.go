@@ -64,8 +64,8 @@ func (builder *BuildManager) UndoCommands() error {
 	return nil
 }
 
-func GetConfigurations(publishImage bool, configFilename string, dockerfileLoc string) (*assignmentEnvironment, error) {
-	config, err := configurations.GetAssignmentEnvConfig(configFilename)
+func GetConfigurations(publishImage bool, configFilepath string, dockerfileLoc string) (*assignmentEnvironment, error) {
+	config, err := configurations.GetAssignmentEnvConfig(configFilepath)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func GetConfigurations(publishImage bool, configFilename string, dockerfileLoc s
 		return nil, errors.Wrap(err, "error in creating image builder instance for assignment env")
 	}
 
-	assgnEnv, err := newAssignmentImage(
+	assgnEnv, err := newAssignmentEnvironment(
 		withImageBuildCfg(imgBuilder),
 		withAssgnEnvConfig(config))
 	if err != nil {

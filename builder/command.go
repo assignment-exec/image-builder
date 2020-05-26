@@ -8,23 +8,23 @@ type command interface {
 type stack []command
 
 func newStack() *stack {
-	var s []command
-	return (*stack)(&s)
+	var commands []command
+	return (*stack)(&commands)
 }
 
-func (s stack) isEmpty() bool {
-	return len(s) == 0
+func (commands stack) isEmpty() bool {
+	return len(commands) == 0
 }
 
-func (s *stack) pop() command {
-	var v command
-	if !s.isEmpty() {
-		v = (*s)[len(*s)-1]
-		*s = append(stack(nil), (*s)[:len(*s)-1]...)
+func (commands *stack) pop() command {
+	var cmd command
+	if !commands.isEmpty() {
+		cmd = (*commands)[len(*commands)-1]
+		*commands = append(stack(nil), (*commands)[:len(*commands)-1]...)
 	}
-	return v
+	return cmd
 }
 
-func (s *stack) push(h command) {
-	*s = append(*s, h)
+func (commands *stack) push(cmd command) {
+	*commands = append(*commands, cmd)
 }

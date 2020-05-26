@@ -29,15 +29,15 @@ type baseEnvImage interface {
 }
 
 type assignmentEnvironment struct {
-	DockerfileData bytes.Buffer
-	ImgBuildConfig *imageBuildConfig
-	AssgnEnvConfig *configurations.AssignmentEnvConfig
-	ImageExists    bool
+	DockerfileInstructions bytes.Buffer
+	ImgBuildConfig         *imageBuildConfig
+	AssgnEnvConfig         *configurations.AssignmentEnvConfig
+	ImageExists            bool
 }
 
-type assignmentImageOption func(*assignmentEnvironment) error
+type assignmentEnvironmentOption func(*assignmentEnvironment) error
 
-func newAssignmentImage(options ...assignmentImageOption) (*assignmentEnvironment, error) {
+func newAssignmentEnvironment(options ...assignmentEnvironmentOption) (*assignmentEnvironment, error) {
 	assgnEnv := &assignmentEnvironment{}
 	for _, opt := range options {
 		if err := opt(assgnEnv); err != nil {
@@ -47,7 +47,7 @@ func newAssignmentImage(options ...assignmentImageOption) (*assignmentEnvironmen
 	return assgnEnv, nil
 }
 
-func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentImageOption {
+func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if imgBuildCfg == nil {
 			return errors.New("image build config instance not provided")
@@ -58,10 +58,10 @@ func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentImageOption {
 	}
 }
 
-func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentImageOption {
+func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if assignCfgs == nil {
-			return errors.New("assignment assignCfgs not provided")
+			return errors.New("assignment environment configurations not provided")
 		}
 		assgnEnv.AssgnEnvConfig = assignCfgs
 		return nil
@@ -82,7 +82,7 @@ func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 		}
 	}
 
-	if assgnEnv.DockerfileData.Len() <= 0 {
+	if assgnEnv.DockerfileInstructions.Len() <= 0 {
 		assgnEnv.ImageExists = true
 	}
 	return nil
@@ -95,60 +95,68 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	if err != nil {
 		return err
 	}
-	username, found := os.LookupEnv(environment.DockerAuthUsername)
-	if !found {
+	username, usernameFound := os.LookupEnv(environment.DockerAuthUsername)
+	if !usernameFound {
 		return errors.New("environment variable for username not set")
 	}
 
-	resp, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
+	response, err := dockerClient.ImageSearch(backgroundContext, username, types.ImageSearchOptions{
 		Limit: 25})
 
 	if err != nil {
 		return err
 	}
-	found = false
-	for _, result := range resp {
+	langImageFound := false
+	for _, result := range response {
 		if strings.Contains(assgnEnv.ImgBuildConfig.imageTag, result.Name) {
-			found = true
+			langImageFound = true
 		}
 	}
-	if !found {
-		return errors.New("code-runner base image not found on docker registry")
+	if !langImageFound {
+		return errors.New("language image not found on docker hub")
 	}
 
 	return nil
 }
 
 func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
-	assgnEnv.DockerfileData.WriteString(assgnEnv.AssgnEnvConfig.WriteInstruction())
-	// Append library names to image tag.
+	var instructions []string
+	instructions = append(instructions, assgnEnv.AssgnEnvConfig.GetInstruction())
+
+	var libraryNames []string
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		libraryNames = append(libraryNames, lib)
 	}
+
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
 func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
-	buf := &bytes.Buffer{}
-	from := fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag)
-	copyInst := fmt.Sprintf("COPY . /" + constants.CodeRunnerDir)
-	buf.WriteString(from)
-	buf.WriteString("\n")
+	var instructions []string
 
-	buf.WriteString(copyInst)
-	buf.WriteString("\n")
+	// FROM instruction.
+	instructions = append(instructions, fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag))
+	// COPY instruction.
+	instructions = append(instructions, fmt.Sprintf("COPY . /"+constants.CodeRunnerDir))
 
+	var libraryNames []string
 	for lib, installCmd := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		// Append library names to image tag.
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		libraryNames = append(libraryNames, lib)
 
-		buf.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)
-		buf.WriteString("\n")
+		// RUN instruction.
+		instructions = append(instructions, "RUN "+installCmd.GetInstruction()+" "+lib)
 	}
 
-	assgnEnv.DockerfileData.WriteString(buf.String())
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
-func (assgnEnv *assignmentEnvironment) writeDockerfile() error {
+func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
 	if !assgnEnv.ImageExists {
 
 		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerfileLoc)
@@ -163,7 +171,7 @@ func (assgnEnv *assignmentEnvironment) writeDockerfile() error {
 		if err != nil {
 			return err
 		}
-		_, err = file.WriteString(assgnEnv.DockerfileData.String())
+		_, err = file.WriteString(assgnEnv.DockerfileInstructions.String())
 		return err
 	}
 	return nil
@@ -233,26 +241,26 @@ func (assgnEnv *assignmentEnvironment) pullImage() error {
 		Username: assgnEnv.ImgBuildConfig.authData.Username,
 		Password: assgnEnv.ImgBuildConfig.authData.Password,
 	}
-	encodedJSON, err := json.Marshal(authConfig)
+	authJson, err := json.Marshal(authConfig)
 	if err != nil {
 		return errors.Wrap(err, "error in encoding authConfig")
 	}
 
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
+	authString := base64.URLEncoding.EncodeToString(authJson)
 	imageString := fmt.Sprintf("%s/%s", constants.DockerIO, assgnEnv.ImgBuildConfig.imageTag)
-	resp, err := dockerClient.ImagePull(backgroundContext, imageString, types.ImagePullOptions{
-		RegistryAuth: authStr,
+	response, err := dockerClient.ImagePull(backgroundContext, imageString, types.ImagePullOptions{
+		RegistryAuth: authString,
 	})
 
 	if err != nil {
 		return errors.Wrap(err, "error in pulling image from hub")
 	}
-	_, err = io.Copy(os.Stdout, resp)
+	_, err = io.Copy(os.Stdout, response)
 	if err != nil {
 		return errors.Wrap(err, "error in reading image pull response")
 	}
 	defer func() {
-		err = resp.Close()
+		err = response.Close()
 		if err != nil {
 			log.Println(err)
 			return
@@ -273,27 +281,27 @@ func (assgnEnv *assignmentEnvironment) pushImage() error {
 		Username: assgnEnv.ImgBuildConfig.authData.Username,
 		Password: assgnEnv.ImgBuildConfig.authData.Password,
 	}
-	encodedJSON, err := json.Marshal(authConfig)
+	authJson, err := json.Marshal(authConfig)
 	if err != nil {
 		return errors.Wrap(err, "error in encoding authConfig")
 	}
 
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
+	authString := base64.URLEncoding.EncodeToString(authJson)
 
 	imageString := fmt.Sprintf("%s/%s", constants.DockerIO, assgnEnv.ImgBuildConfig.imageTag)
 
-	resp, err := dockerClient.ImagePush(backgroundContext, imageString, types.ImagePushOptions{
-		RegistryAuth: authStr,
+	response, err := dockerClient.ImagePush(backgroundContext, imageString, types.ImagePushOptions{
+		RegistryAuth: authString,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error in pushing image to hub")
 	}
-	_, err = io.Copy(os.Stdout, resp)
+	_, err = io.Copy(os.Stdout, response)
 	if err != nil {
 		return errors.Wrap(err, "error in reading image push response")
 	}
 	defer func() {
-		err = resp.Close()
+		err = response.Close()
 		if err != nil {
 			log.Println(err)
 			return
@@ -304,7 +312,7 @@ func (assgnEnv *assignmentEnvironment) pushImage() error {
 
 func (assgnEnv *assignmentEnvironment) resetDockerfileData() {
 	// Clear the dockerfile data.
-	assgnEnv.DockerfileData.Reset()
+	assgnEnv.DockerfileInstructions.Reset()
 }
 
 func (assgnEnv *assignmentEnvironment) deleteDockerfile() error {

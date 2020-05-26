@@ -67,21 +67,21 @@ func withImageTag(tag string) imageBuildConfigOption {
 	}
 }
 
-func withPublishImageFlag(publishImage bool) imageBuildConfigOption {
+func withPublishImageFlag(isPublish bool) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
-		imgBuildCfg.publishImage = publishImage
+		imgBuildCfg.publishImage = isPublish
 		return nil
 	}
 }
 
 // Get the docker authentication details.
 func getAuthData() (*dockerAuthData, error) {
-	username, found := os.LookupEnv(environment.DockerAuthUsername)
-	if !found {
+	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
+	if !hasFound {
 		return nil, errors.New("environment variable for username not set")
 	}
-	password, found := os.LookupEnv(environment.DockerAuthPassword)
-	if !found {
+	password, hasFound := os.LookupEnv(environment.DockerAuthPassword)
+	if !hasFound {
 		return nil, errors.New("environment variable for password not set")
 	}
 

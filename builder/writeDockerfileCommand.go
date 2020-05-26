@@ -5,7 +5,7 @@ type writeDockerfileCommand struct {
 }
 
 func (cmd *writeDockerfileCommand) execute() error {
-	return cmd.assgnEnv.writeDockerfile()
+	return cmd.assgnEnv.writeToDockerfile()
 }
 
 func (cmd *writeDockerfileCommand) undo() error {
