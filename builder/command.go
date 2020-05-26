@@ -16,28 +16,28 @@ type stack []command
 
 // newStack creates and returns a new instance of stack.
 func newStack() *stack {
-	var cmdStack []command
-	return (*stack)(&cmdStack)
+	var commands []command
+	return (*stack)(&commands)
 }
 
 // isEmpty checks whether stack is empty.
 // It returns a boolean flag accordingly.
-func (cmdStack stack) isEmpty() bool {
-	return len(cmdStack) == 0
+func (commands stack) isEmpty() bool {
+	return len(commands) == 0
 }
 
 // pop removes the last inserted command from the stack.
 // It returns the popped command.
-func (cmdStack *stack) pop() command {
+func (commands *stack) pop() command {
 	var cmd command
-	if !cmdStack.isEmpty() {
-		cmd = (*cmdStack)[len(*cmdStack)-1]
-		*cmdStack = append(stack(nil), (*cmdStack)[:len(*cmdStack)-1]...)
+	if !commands.isEmpty() {
+		cmd = (*commands)[len(*commands)-1]
+		*commands = append(stack(nil), (*commands)[:len(*commands)-1]...)
 	}
 	return cmd
 }
 
 // push appends the command to the stack.
-func (cmdStack *stack) push(cmd command) {
-	*cmdStack = append(*cmdStack, cmd)
+func (commands *stack) push(cmd command) {
+	*commands = append(*commands, cmd)
 }

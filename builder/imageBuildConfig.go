@@ -26,7 +26,7 @@ type imageBuildConfig struct {
 	authData      *dockerAuthData
 	imageTag      string
 	dockerfileLoc string
-	isPublish     bool
+	publishImage  bool
 }
 
 // imageBuildConfigOption is a function interface that
@@ -94,7 +94,7 @@ func withImageTag(tag string) imageBuildConfigOption {
 // This returned function in turn sets the 'isPublish' flag within imageBuildConfig instance.
 func withPublishImageFlag(isPublish bool) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
-		imgBuildCfg.isPublish = isPublish
+		imgBuildCfg.publishImage = isPublish
 		return nil
 	}
 }

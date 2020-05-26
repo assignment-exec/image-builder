@@ -40,7 +40,7 @@ type assignmentEnvironment struct {
 	DockerfileInstructions bytes.Buffer
 	ImgBuildConfig         *imageBuildConfig
 	AssgnEnvConfig         *configurations.AssignmentEnvConfig
-	IsImagePresent         bool
+	ImageExists            bool
 }
 
 // assignmentEnvironmentOption is a function interface that
@@ -78,7 +78,7 @@ func withImageBuildCfg(imgBuildCfg *imageBuildConfig) assignmentEnvironmentOptio
 func withAssgnEnvConfig(assignCfgs *configurations.AssignmentEnvConfig) assignmentEnvironmentOption {
 	return func(assgnEnv *assignmentEnvironment) error {
 		if assignCfgs == nil {
-			return errors.New("assignment assignCfgs not provided")
+			return errors.New("assignment environment configurations not provided")
 		}
 		assgnEnv.AssgnEnvConfig = assignCfgs
 		return nil
@@ -104,7 +104,7 @@ func (assgnEnv *assignmentEnvironment) verifyAndWriteInstructions() error {
 	}
 
 	if assgnEnv.DockerfileInstructions.Len() <= 0 {
-		assgnEnv.IsImagePresent = true
+		assgnEnv.ImageExists = true
 	}
 	return nil
 }
@@ -118,8 +118,8 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	if err != nil {
 		return err
 	}
-	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
-	if !hasFound {
+	username, usernameFound := os.LookupEnv(environment.DockerAuthUsername)
+	if !usernameFound {
 		return errors.New("environment variable for username not set")
 	}
 
@@ -129,14 +129,14 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 	if err != nil {
 		return err
 	}
-	hasFound = false
+	langImageFound := false
 	for _, result := range response {
 		if strings.Contains(assgnEnv.ImgBuildConfig.imageTag, result.Name) {
-			hasFound = true
+			langImageFound = true
 		}
 	}
-	if !hasFound {
-		return errors.New("code-runner base image not found on docker registry")
+	if !langImageFound {
+		return errors.New("language image not found on docker hub")
 	}
 
 	return nil
@@ -146,41 +146,49 @@ func (assgnEnv *assignmentEnvironment) verifyLanguage() error {
 // in 'assignmentEnvironment' instance staring from the base code runner image.
 // Which is then followed by the required language and its dependencies.
 func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
-	assgnEnv.DockerfileInstructions.WriteString(assgnEnv.AssgnEnvConfig.WriteInstruction())
-	// Append library names to image tag.
+	var instructions []string
+	instructions = append(instructions, assgnEnv.AssgnEnvConfig.GetInstruction())
+
+	var libraryNames []string
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		libraryNames = append(libraryNames, lib)
 	}
+
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
 // writeFromDependencies writes the docker instructions to bytes buffer
 // in 'assignmentEnvironment' instance staring from the respective language image.
 // Which is then followed by the language dependencies.
 func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
-	instructionsBuffer := &bytes.Buffer{}
-	fromInstruction := fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag)
-	copyInstruction := fmt.Sprintf("COPY . /" + constants.CodeRunnerDir)
-	instructionsBuffer.WriteString(fromInstruction)
-	instructionsBuffer.WriteString("\n")
+	var instructions []string
 
-	instructionsBuffer.WriteString(copyInstruction)
-	instructionsBuffer.WriteString("\n")
+	// FROM instruction.
+	instructions = append(instructions, fmt.Sprintf("FROM %s", assgnEnv.ImgBuildConfig.imageTag))
+	// COPY instruction.
+	instructions = append(instructions, fmt.Sprintf("COPY . /"+constants.CodeRunnerDir))
 
+	var libraryNames []string
 	for lib, installCmd := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		// Append library names to image tag.
-		assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag, lib}, "-")
+		libraryNames = append(libraryNames, lib)
 
-		instructionsBuffer.WriteString("RUN " + installCmd.WriteInstruction() + " " + lib)
-		instructionsBuffer.WriteString("\n")
+		// RUN instruction.
+		instructions = append(instructions, "RUN "+installCmd.GetInstruction()+" "+lib)
 	}
 
-	assgnEnv.DockerfileInstructions.WriteString(instructionsBuffer.String())
+	// Generate the image tag.
+	assgnEnv.ImgBuildConfig.imageTag = strings.Join([]string{assgnEnv.ImgBuildConfig.imageTag,
+		strings.Join(libraryNames, "-")}, "-")
+	assgnEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
 // writeToDockerfile creates a Dockerfile at the specified location and writes
 // the instructions bytes buffer to it. It returns any error encountered.
 func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
-	if !assgnEnv.IsImagePresent {
+	if !assgnEnv.ImageExists {
 
 		file, err := os.Create(assgnEnv.ImgBuildConfig.dockerfileLoc)
 		defer func() {
@@ -206,7 +214,7 @@ func (assgnEnv *assignmentEnvironment) writeToDockerfile() error {
 // returns any error encountered.
 func (assgnEnv *assignmentEnvironment) build() error {
 
-	if !assgnEnv.IsImagePresent {
+	if !assgnEnv.ImageExists {
 		backgroundContext := context.Background()
 		dockerClient, err := client.NewEnvClient()
 		if err != nil {
@@ -255,7 +263,7 @@ func (assgnEnv *assignmentEnvironment) build() error {
 // and if publish flag is set. It returns any error encountered during image
 // push operation.
 func (assgnEnv *assignmentEnvironment) publish() error {
-	if !assgnEnv.IsImagePresent && assgnEnv.ImgBuildConfig.isPublish {
+	if !assgnEnv.ImageExists && assgnEnv.ImgBuildConfig.publishImage {
 		return assgnEnv.pushImage()
 	}
 	return nil

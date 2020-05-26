@@ -7,7 +7,7 @@ import (
 )
 
 var publishImage = flag.Bool("publishImage", false, "Publish image to docker hub")
-var assignmentEnvConfigFilepath = flag.String("assignmentEnvConfig", "assignment-env.yaml", "Assignment Environment configuration filepath")
+var assignmentEnvConfigFilepath = flag.String("assignmentEnvConfigFilepath", "assignment-env.yaml", "Assignment Environment configuration filepath")
 var dockerfileLoc = flag.String("dockerfileLoc", "Dockerfile", "Location for dockerfile to be created")
 
 func main() {

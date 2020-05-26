@@ -52,15 +52,15 @@ func (config *AssignmentEnvConfig) UnmarshalYAML(unmarshal func(interface{}) err
 	return nil
 }
 
-// WriteInstruction returns the docker instructions for the full configuration
+// GetInstruction returns the docker instructions for the full configuration
 // as a single string.
-func (config AssignmentEnvConfig) WriteInstruction() string {
+func (config AssignmentEnvConfig) GetInstruction() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString("FROM " + config.BaseImage)
 	buf.WriteString("\n")
 	buf.WriteString("COPY . /" + constants.CodeRunnerDir)
 	buf.WriteString("\n")
-	buf.WriteString(config.Deps.WriteInstruction() + "\n")
+	buf.WriteString(config.Deps.GetInstruction() + "\n")
 	return buf.String()
 }
 
@@ -71,16 +71,16 @@ type Dependencies struct {
 	Libraries map[string]LibInstallationCmd `yaml:"lib"`
 }
 
-// WriteInstruction returns the docker instructions for the dependencies
+// GetInstruction returns the docker instructions for the dependencies
 // as a single string.
-func (langDep Dependencies) WriteInstruction() string {
+func (langDep Dependencies) GetInstruction() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString(langDep.Language.WriteInstruction())
+	buf.WriteString(langDep.Language.GetInstruction())
 	buf.WriteString("\n")
 	buf.WriteString("ENV " + environment.LanguageEnvKey + " " + langDep.Language.Name)
 	buf.WriteString("\n")
 	for _, installCmd := range langDep.Libraries {
-		buf.WriteString("RUN " + installCmd.WriteInstruction())
+		buf.WriteString("RUN " + installCmd.GetInstruction())
 		buf.WriteString("\n")
 	}
 	return buf.String()
@@ -92,8 +92,8 @@ type LibInstallationCmd struct {
 	Cmd string `yaml:"cmd"`
 }
 
-// WriteInstruction returns the library installation command.
-func (libCmd LibInstallationCmd) WriteInstruction() string {
+// GetInstruction returns the library installation command.
+func (libCmd LibInstallationCmd) GetInstruction() string {
 	return libCmd.Cmd
 }
 
@@ -103,10 +103,10 @@ type LanguageInfo struct {
 	Version string `yaml:"langVersion"`
 }
 
-// WriteInstruction returns the docker instruction for the language
+// GetInstruction returns the docker instruction for the language
 // as a single string. The instruction includes running the installation
 // script for the given language.
-func (langInfo LanguageInfo) WriteInstruction() string {
+func (langInfo LanguageInfo) GetInstruction() string {
 	return fmt.Sprintf("RUN ./%s/%s_%s.sh", constants.InstallationScriptsDir, langInfo.Name, langInfo.Version)
 }
 
