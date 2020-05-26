@@ -125,7 +125,6 @@ func (assgnEnv *assignmentEnvironment) writeFromBaseImage() {
 
 	var libraryNames []string
 	for lib := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		// Append library names to an array.
 		libraryNames = append(libraryNames, lib)
 	}
 
@@ -145,7 +144,6 @@ func (assgnEnv *assignmentEnvironment) writeFromDependencies() {
 
 	var libraryNames []string
 	for lib, installCmd := range assgnEnv.AssgnEnvConfig.Deps.Libraries {
-		// Append library names to an array.
 		libraryNames = append(libraryNames, lib)
 
 		// RUN instruction.
