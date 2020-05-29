@@ -3,10 +3,10 @@
 // perform all operations and perform undo operations when any error is encountered.
 package builder
 
-// verifyCommand struct type holds assignmentEnvironment instance
+// verifyCommand struct type holds assignmentEnvironmentImageBuilder instance
 // which is required to verify language image and write the dockerfile instructions.
 type verifyCommand struct {
-	assgnEnv *assignmentEnvironment
+	assgnEnv *assignmentEnvironmentImageBuilder
 }
 
 // execute invokes the verifyAndWriteInstructions function to verify

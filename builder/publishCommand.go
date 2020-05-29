@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// publishCommand struct type holds assignmentEnvironment instance
+// publishCommand struct type holds assignmentEnvironmentImageBuilder instance
 // which is required to perform image publish operation.
 type publishCommand struct {
-	assgnEnv *assignmentEnvironment
+	assgnEnv *assignmentEnvironmentImageBuilder
 }
 
 // execute invokes the publish function to push the image to docker hub.

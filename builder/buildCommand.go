@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// buildCommand struct type holds assignmentEnvironment instance
+// buildCommand struct type holds assignmentEnvironmentImageBuilder instance
 // which is required to perform image build operation.
 type buildCommand struct {
-	assgnEnv *assignmentEnvironment
+	assgnEnv *assignmentEnvironmentImageBuilder
 }
 
 // execute invokes the build function to build the docker image.

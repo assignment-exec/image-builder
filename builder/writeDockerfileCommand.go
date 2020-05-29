@@ -3,11 +3,11 @@
 // perform all operations and perform undo operations when any error is encountered.
 package builder
 
-// writeDockerfileCommand struct type holds assignmentEnvironment instance
+// writeDockerfileCommand struct type holds assignmentEnvironmentImageBuilder instance
 // which is required to write the dockerfile instructions from bytes buffer
 // to an actual Dockerfile.
 type writeDockerfileCommand struct {
-	assgnEnv *assignmentEnvironment
+	assgnEnv *assignmentEnvironmentImageBuilder
 }
 
 // execute invokes writeToDockerfile function to write the stored instructions

@@ -35,10 +35,10 @@ func NewBuildManager(options ...BuildManagerOption) (*BuildManager, error) {
 }
 
 // WithCommands is used as an option while creating BuildManager instance. It takes
-// assignmentEnvironment as a parameter and returns 'BuildManagerOption' function.
-// This returned function in turn creates a new commands array, sets the assignmentEnvironment
+// assignmentEnvironmentImageBuilder as a parameter and returns 'BuildManagerOption' function.
+// This returned function in turn creates a new commands array, sets the assignmentEnvironmentImageBuilder
 // instance for every command and assigns this command array to BuildManager.
-func WithCommands(assgnEnv *assignmentEnvironment) BuildManagerOption {
+func WithCommands(assgnEnv *assignmentEnvironmentImageBuilder) BuildManagerOption {
 	return func(b *BuildManager) error {
 
 		var commandList []command
@@ -89,9 +89,9 @@ func (builder *BuildManager) UndoCommands() error {
 
 // GetConfigurations takes image publish flag, assignment environment configuration file path
 // and dockerfile location, reads the config file, sets the imageBuildConfig instance,
-// sets the assignmentEnvironment instance.
-// It returns the assignmentEnvironment instance and any error encountered.
-func GetConfigurations(publishImage bool, configFilepath string, dockerfileLoc string) (*assignmentEnvironment, error) {
+// sets the assignmentEnvironmentImageBuilder instance.
+// It returns the assignmentEnvironmentImageBuilder instance and any error encountered.
+func GetConfigurations(publishImage bool, configFilepath string, dockerfileLoc string) (*assignmentEnvironmentImageBuilder, error) {
 	config, err := configurations.GetAssignmentEnvConfig(configFilepath)
 	if err != nil {
 		return nil, err
