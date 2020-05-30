@@ -1,6 +1,5 @@
-// Package builder provides primitives to write dockerfile for assignment environment,
-// build its docker image and publishImage it to docker hub. It uses command pattern to
-// perform all operations and perform undo operations when any error is encountered.
+// Package builder implements routines to write dockerfile for assignment environment,
+// build its docker image and publish it to docker hub.
 package builder
 
 import (

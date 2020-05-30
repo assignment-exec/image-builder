@@ -1,5 +1,5 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publishImage it to docker hub.
+// build its docker image and publish it to docker hub.
 package builder
 
 import (

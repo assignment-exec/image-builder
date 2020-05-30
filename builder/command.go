@@ -1,6 +1,5 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publishImage it to docker hub. It uses command pattern to
-// perform all operations and perform undo operations when any error is encountered.
+// build its docker image and publish it to docker hub.
 package builder
 
 // command interface type represents the execute
@@ -21,13 +20,12 @@ func newStack() *stack {
 }
 
 // isEmpty checks whether stack is empty.
-// It returns a boolean flag accordingly.
 func (commands stack) isEmpty() bool {
 	return len(commands) == 0
 }
 
-// pop removes the last inserted command from the stack.
-// It returns the popped command.
+// pop removes the last inserted command from the stack and
+// returns the popped command.
 func (commands *stack) pop() command {
 	var cmd command
 	if !commands.isEmpty() {

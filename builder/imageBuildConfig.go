@@ -1,6 +1,5 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publishImage it to docker hub. It uses command pattern to
-// perform all operations and perform undo operations when any error is encountered.
+// build its docker image and publish it to docker hub.
 package builder
 
 import (
@@ -96,7 +95,7 @@ func withPublishImageFlag(publishImage bool) imageBuildConfigOption {
 }
 
 // getAuthData reads the docker authentication data, i.e username
-// and password from environment variables. It returns the 'dockerAuthData'
+// and password from environment variables. It returns the dockerAuthData
 // instance and any error encountered while reading from environment variables.
 func getAuthData() (*dockerAuthData, error) {
 	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
