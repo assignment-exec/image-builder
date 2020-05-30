@@ -86,7 +86,6 @@ func (builder *BuildManager) UndoCommands() error {
 // GetConfigurations takes image publishImage flag, assignment environment configuration file path
 // and dockerfile location, reads the config file, sets the imageBuildConfig instance,
 // sets the assignmentEnvironmentImageBuilder instance.
-// It returns the assignmentEnvironmentImageBuilder instance and any error encountered.
 func GetConfigurations(publishImage bool, configFilepath string, dockerfileLoc string) (*assignmentEnvironmentImageBuilder, error) {
 	config, err := configurations.GetAssignmentEnvConfig(configFilepath)
 	if err != nil {

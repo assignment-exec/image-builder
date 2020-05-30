@@ -8,10 +8,9 @@ type verifyCommand struct {
 	asgmtEnv *assignmentEnvironmentImageBuilder
 }
 
-// execute invokes the verifyAndWriteInstructions function to verify
-// whether language image is already present on docker hub and accordingly
-// write dockerfile instructions to the bytes buffer for the provided
-// assignment environment configurations.
+// execute invokes the verifyAndWriteInstructions function to verify whether
+// a docker image for given language is already present on docker hub and accordingly
+// write dockerfile instructions for the provided assignment environment configurations.
 func (cmd *verifyCommand) execute() error {
 	return cmd.asgmtEnv.verifyAndWriteInstructions()
 }

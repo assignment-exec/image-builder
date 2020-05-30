@@ -95,8 +95,7 @@ func withPublishImageFlag(publishImage bool) imageBuildConfigOption {
 }
 
 // getAuthData reads the docker authentication data, i.e username
-// and password from environment variables. It returns the dockerAuthData
-// instance and any error encountered while reading from environment variables.
+// and password from environment variables.
 func getAuthData() (*dockerAuthData, error) {
 	username, hasFound := os.LookupEnv(environment.DockerAuthUsername)
 	if !hasFound {
@@ -114,7 +113,6 @@ func getAuthData() (*dockerAuthData, error) {
 // getDockerBuildContextTar creates a tar file for docker build context.
 // The tar holds Dockerfile and installation scripts that are required for
 // building the assignment environment image.
-// It returns the read tar file and any error encountered while creating and reading tar.
 func (imgBuildCfg imageBuildConfig) getDockerBuildContextTar() (*os.File, error) {
 
 	// Gets the reader for the Dockerfile.

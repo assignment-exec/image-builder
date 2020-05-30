@@ -88,11 +88,11 @@ func (asgmtEnv *assignmentEnvironmentImageBuilder) verifyAndWriteInstructions() 
 	// Verify whether language image is present in registry.
 	if err := asgmtEnv.verifyLanguage(); err != nil {
 		// If no then write the instructions from base image.
-		asgmtEnv.writeFromBaseImage()
+		asgmtEnv.writeInstructionsLayerOnBaseImage()
 	} else {
 		if len(asgmtEnv.AsgmtEnvConfig.Deps.Libraries) > 0 {
 			// Else write the instructions from dependencies.
-			asgmtEnv.writeFromDependencies()
+			asgmtEnv.writeInstructionsLayerOnLanguageImage()
 		}
 	}
 
@@ -134,9 +134,9 @@ func (asgmtEnv *assignmentEnvironmentImageBuilder) verifyLanguage() error {
 	return nil
 }
 
-// writeFromBaseImage writes the docker instructions to bytes buffer starting from the
+// writeInstructionsLayerOnBaseImage writes the docker instructions to starting from the
 // base code runner image. Which is then followed by the required language and its dependencies.
-func (asgmtEnv *assignmentEnvironmentImageBuilder) writeFromBaseImage() {
+func (asgmtEnv *assignmentEnvironmentImageBuilder) writeInstructionsLayerOnBaseImage() {
 	var instructions []string
 	instructions = append(instructions, asgmtEnv.AsgmtEnvConfig.GetInstruction())
 
@@ -151,9 +151,9 @@ func (asgmtEnv *assignmentEnvironmentImageBuilder) writeFromBaseImage() {
 	asgmtEnv.DockerfileInstructions.WriteString(strings.Join(instructions, "\n"))
 }
 
-// writeFromDependencies writes the docker instructions to bytes buffer starting from the respective
-// language image. Which is then followed by the language dependencies.
-func (asgmtEnv *assignmentEnvironmentImageBuilder) writeFromDependencies() {
+// writeInstructionsLayerOnLanguageImage writes the docker instructions starting
+// from the respective language image. Which is then followed by the language dependencies.
+func (asgmtEnv *assignmentEnvironmentImageBuilder) writeInstructionsLayerOnLanguageImage() {
 	var instructions []string
 
 	// FROM instruction.

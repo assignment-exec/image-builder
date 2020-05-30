@@ -111,8 +111,7 @@ func (langInfo LanguageInfo) GetInstruction() string {
 }
 
 // GetAssignmentEnvConfig reads the yaml config file and unmarshals it into
-// `AssignmentEnvConfig` struct. It returns the `AssignmentEnvConfig` instance
-// and any error encountered.
+// AssignmentEnvConfig instance.
 func GetAssignmentEnvConfig(configFilepath string) (*AssignmentEnvConfig, error) {
 
 	yamlFile, err := ioutil.ReadFile(configFilepath)
