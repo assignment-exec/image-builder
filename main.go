@@ -14,12 +14,12 @@ func main() {
 
 	flag.Parse()
 
-	assgnEnv, err := builder.GetConfigurations(*publishImage, *assignmentEnvConfigFilepath, *dockerfileLoc)
+	asgmtEnv, err := builder.GetConfigurations(*publishImage, *assignmentEnvConfigFilepath, *dockerfileLoc)
 	if err != nil {
 		log.Fatalf("error in getting configurations: %v", err)
 	}
 
-	buildManager, err := builder.NewBuildManager(builder.WithCommands(assgnEnv))
+	buildManager, err := builder.NewBuildManager(builder.WithCommands(asgmtEnv))
 	if err != nil {
 		log.Fatalf("error in creating a builder: %v", err)
 	}

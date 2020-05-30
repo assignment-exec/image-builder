@@ -1,12 +1,12 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publish it to docker hub. It uses command pattern to
+// build its docker image and publishImage it to docker hub. It uses command pattern to
 // perform all operations and perform undo operations when any error is encountered.
 package builder
 
 // verifyCommand struct type holds assignmentEnvironmentImageBuilder instance
 // which is required to verify language image and write the dockerfile instructions.
 type verifyCommand struct {
-	assgnEnv *assignmentEnvironmentImageBuilder
+	asgmtEnv *assignmentEnvironmentImageBuilder
 }
 
 // execute invokes the verifyAndWriteInstructions function to verify
@@ -14,7 +14,7 @@ type verifyCommand struct {
 // write dockerfile instructions to the bytes buffer for the provided
 // assignment environment configurations.
 func (cmd *verifyCommand) execute() error {
-	return cmd.assgnEnv.verifyAndWriteInstructions()
+	return cmd.asgmtEnv.verifyAndWriteInstructions()
 }
 
 // undo is a No operation function as there is no possible undo to be performed

@@ -1,5 +1,5 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publish it to docker hub. It uses command pattern to
+// build its docker image and publishImage it to docker hub. It uses command pattern to
 // perform all operations and perform undo operations when any error is encountered.
 package builder
 
@@ -20,7 +20,7 @@ type dockerAuthData struct {
 }
 
 // imageBuildConfig struct type holds docker authentication data,
-// image tag, dockerfile location to be created, publish image flag.
+// image tag, dockerfile location to be created, publishImage image flag.
 // All required to build assignment environment image.
 type imageBuildConfig struct {
 	authData      *dockerAuthData
@@ -29,13 +29,15 @@ type imageBuildConfig struct {
 	publishImage  bool
 }
 
-// imageBuildConfigOption is a function interface that
-// is supplied as different options while creating new instance of
-// 'imageBuildConfig' type. This function returns any error encountered.
+// imageBuildConfigOption represents options that can be used to help initialize
+// an instance of imageBuildConfig.
+// Each option is a closure that is responsible for initializing one or more members
+// while instantiating imageBuildConfig.
 type imageBuildConfigOption func(*imageBuildConfig) error
 
-// newImageBuildConfig takes one or more options and
-// returns new instance of imageBuildConfig.
+// newImageBuildConfig constructs an instance of imageBuildConfig
+// by applying each of the provided options.
+// The construction of the object fails upon the failure of at least one of the given options.
 func newImageBuildConfig(options ...imageBuildConfigOption) (*imageBuildConfig, error) {
 	imgBuildCfg := &imageBuildConfig{}
 	for _, opt := range options {
@@ -46,9 +48,8 @@ func newImageBuildConfig(options ...imageBuildConfigOption) (*imageBuildConfig, 
 	return imgBuildCfg, nil
 }
 
-// withDockerfileLocation is used as an option while creating imageBuildConfig instance. It takes
-// docker file location as a parameter and returns 'imageBuildConfigOption' function.
-// This returned function in turn sets the docker file location within imageBuildConfig instance.
+// withDockerfileLocation returns an imageBuildConfigOption for initializing the
+// dockerfile location.
 func withDockerfileLocation(fileLoc string) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
 		// Validate fileLoc and raise error if validation fails.
@@ -61,9 +62,8 @@ func withDockerfileLocation(fileLoc string) imageBuildConfigOption {
 	}
 }
 
-// withDockerAuthData is used as an option while creating imageBuildConfig instance. It takes
-// 'dockerAuthData' instance as a parameter and returns 'imageBuildConfigOption' function.
-// This returned function in turn sets the 'dockerAuthData' within imageBuildConfig instance.
+// withDockerAuthData returns an imageBuildConfigOption for initializing docker
+// authentication data.
 func withDockerAuthData(authData *dockerAuthData) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
 		// Validate authData and raise error if validation fails.
@@ -75,9 +75,7 @@ func withDockerAuthData(authData *dockerAuthData) imageBuildConfigOption {
 	}
 }
 
-// withImageTag is used as an option while creating imageBuildConfig instance. It takes
-// image tag string as a parameter and returns 'imageBuildConfigOption' function.
-// This returned function in turn sets the 'imageTag' within imageBuildConfig instance.
+// withImageTag returns an imageBuildConfigOption for initializing image tag.
 func withImageTag(tag string) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
 		// Validate tag and raise error if validation fails.
@@ -89,12 +87,10 @@ func withImageTag(tag string) imageBuildConfigOption {
 	}
 }
 
-// withPublishImageFlag is used as an option while creating imageBuildConfig instance. It takes
-// publish image flag as a parameter and returns 'imageBuildConfigOption' function.
-// This returned function in turn sets the 'isPublish' flag within imageBuildConfig instance.
-func withPublishImageFlag(isPublish bool) imageBuildConfigOption {
+// withPublishImageFlag returns an imageBuildConfigOption for initializing publishImage flag.
+func withPublishImageFlag(publishImage bool) imageBuildConfigOption {
 	return func(imgBuildCfg *imageBuildConfig) error {
-		imgBuildCfg.publishImage = isPublish
+		imgBuildCfg.publishImage = publishImage
 		return nil
 	}
 }

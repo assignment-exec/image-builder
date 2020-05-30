@@ -3,7 +3,7 @@ package validation
 
 import "github.com/pkg/errors"
 
-// Validator is a function interface that performs any kind of validation.
+// Validator is a function that performs any kind of validation.
 type Validator func() error
 
 // Validate validates one or more validators.

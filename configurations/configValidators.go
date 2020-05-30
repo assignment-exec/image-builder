@@ -8,11 +8,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// configValidator is a function interface that is supplied
-// as different options while validating parameters of `AssignmentEnvConfig`.
+// configValidator represents options to help validate parameters of AssignmentEnvConfig.
 type configValidator func(AssignmentEnvConfig) error
 
-// ValidatorForConfig takes the `AssignmentEnvConfig` to be validated
+// ValidatorForConfig takes the AssignmentEnvConfig to be validated
 // and one or more validator options to validate all parameters.
 func ValidatorForConfig(cfg AssignmentEnvConfig, configValidators ...configValidator) validation.Validator {
 	return func() error {
@@ -25,9 +24,7 @@ func ValidatorForConfig(cfg AssignmentEnvConfig, configValidators ...configValid
 	}
 }
 
-// withBaseImageValidator is used as an option while validating. It returns
-// `configValidator` function. This returned function in turn validates the base
-// image provided in assignment environment config.
+// withBaseImageValidator returns a configValidator for validating the given base image.
 func withBaseImageValidator() configValidator {
 	return func(cfg AssignmentEnvConfig) error {
 		// Base Image name cannot be empty string.
@@ -39,9 +36,8 @@ func withBaseImageValidator() configValidator {
 	}
 }
 
-// withLanguageValidator is used as an option while validating. It returns
-// `configValidator` function. This returned function in turn validates the
-// language information provided in assignment environment config.
+// withLanguageValidator returns a configValidator for validating the given
+// language name and version.
 func withLanguageValidator() configValidator {
 	return func(cfg AssignmentEnvConfig) error {
 		// Language name and version name cannot be empty string.
@@ -58,10 +54,8 @@ func withLanguageValidator() configValidator {
 	}
 }
 
-// withLibsValidator is used as an option while validating. It returns
-// `configValidator` function. This returned function in turn validates the
-// library names and their respective installation commands provided in
-// assignment environment config.
+// withLibsValidator returns a configValidator for validating the given
+// libraries and their installation commands.
 func withLibsValidator() configValidator {
 	return func(cfg AssignmentEnvConfig) error {
 		// Library installation commands cannot be empty strings.

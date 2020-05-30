@@ -1,5 +1,5 @@
 // Package builder implements routines to write dockerfile for assignment environment,
-// build its docker image and publish it to docker hub. It uses command pattern to
+// build its docker image and publishImage it to docker hub. It uses command pattern to
 // perform all operations and perform undo operations when any error is encountered.
 package builder
 
@@ -17,13 +17,15 @@ type BuildManager struct {
 	undoCommands *stack
 }
 
-// BuildManagerOption is a function interface that
-// is supplied as different options while creating new instance of
-// 'BuildManager' type. This function returns any error encountered.
+// BuildManagerOption represents options that can be used to help initialize
+// an instance of BuildManager.
+// Each option is a closure that is responsible for initializing one or more members
+// while instantiating BuildManager.
 type BuildManagerOption func(*BuildManager) error
 
-// NewBuildManager takes one or more options and
-// returns new instance of BuildManager.
+// NewBuildManager constructs an instance of BuildManager
+// by applying each of the provided options.
+// The construction of the object fails upon the failure of at least one of the given options.
 func NewBuildManager(options ...BuildManagerOption) (*BuildManager, error) {
 	b := &BuildManager{undoCommands: newStack()}
 	for _, opt := range options {
@@ -34,19 +36,16 @@ func NewBuildManager(options ...BuildManagerOption) (*BuildManager, error) {
 	return b, nil
 }
 
-// WithCommands is used as an option while creating BuildManager instance. It takes
-// assignmentEnvironmentImageBuilder as a parameter and returns 'BuildManagerOption' function.
-// This returned function in turn creates a new commands array, sets the assignmentEnvironmentImageBuilder
-// instance for every command and assigns this command array to BuildManager.
-func WithCommands(assgnEnv *assignmentEnvironmentImageBuilder) BuildManagerOption {
+// WithCommands returns a BuildManagerOption for initializing the commands.
+func WithCommands(asgmtEnv *assignmentEnvironmentImageBuilder) BuildManagerOption {
 	return func(b *BuildManager) error {
 
 		var commandList []command
 		commandList = append(commandList,
-			&verifyCommand{assgnEnv: assgnEnv},
-			&writeDockerfileCommand{assgnEnv: assgnEnv},
-			&buildCommand{assgnEnv: assgnEnv},
-			&publishCommand{assgnEnv: assgnEnv})
+			&verifyCommand{asgmtEnv: asgmtEnv},
+			&writeDockerfileCommand{asgmtEnv: asgmtEnv},
+			&buildCommand{asgmtEnv: asgmtEnv},
+			&publishCommand{asgmtEnv: asgmtEnv})
 
 		b.commands = commandList
 		return nil
@@ -54,9 +53,8 @@ func WithCommands(assgnEnv *assignmentEnvironmentImageBuilder) BuildManagerOptio
 }
 
 // ExecuteCommands invokes execute function for all commands sequentially.
-// Every command is pushed to the 'undoCommands' stack to keep track of order of execution.
-// If error is encountered in any command execution then perform all undo operations from the stack.
-// It returns error encountered in execution of commands.
+// If error is encountered in any command execution then perform undo operations in
+// the reverse order of execution.
 func (builder *BuildManager) ExecuteCommands() error {
 	for _, cmd := range builder.commands {
 		builder.undoCommands.push(cmd)
@@ -87,7 +85,7 @@ func (builder *BuildManager) UndoCommands() error {
 	return nil
 }
 
-// GetConfigurations takes image publish flag, assignment environment configuration file path
+// GetConfigurations takes image publishImage flag, assignment environment configuration file path
 // and dockerfile location, reads the config file, sets the imageBuildConfig instance,
 // sets the assignmentEnvironmentImageBuilder instance.
 // It returns the assignmentEnvironmentImageBuilder instance and any error encountered.
@@ -114,13 +112,13 @@ func GetConfigurations(publishImage bool, configFilepath string, dockerfileLoc s
 		return nil, errors.Wrap(err, "error in creating image builder instance for assignment env")
 	}
 
-	assgnEnv, err := newAssignmentEnvironment(
+	asgmtEnv, err := newAssignmentEnvironmentImageBuilder(
 		withImageBuildCfg(imgBuilder),
-		withAssgnEnvConfig(config))
+		withAsgmtEnvConfig(config))
 	if err != nil {
 		return nil, errors.Wrap(err, "error in creating assignment env instance")
 	}
 
-	return assgnEnv, nil
+	return asgmtEnv, nil
 
 }
