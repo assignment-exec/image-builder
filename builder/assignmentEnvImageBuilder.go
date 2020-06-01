@@ -198,7 +198,7 @@ func (asgmtEnv *assignmentEnvironmentImageBuilder) writeToDockerfile() error {
 	return nil
 }
 
-// build a docker image for the given language. If the image is already present,
+// build a docker image for the given assignment environment. If the image is already present,
 // then it simply pull the image.
 func (asgmtEnv *assignmentEnvironmentImageBuilder) build() error {
 
@@ -290,7 +290,8 @@ func (asgmtEnv *assignmentEnvironmentImageBuilder) publishImage() error {
 	return nil
 }
 
-// pullImage pulls the required docker image for given language from docker hub.
+// pullImage pulls the required docker image for given assignment environment
+// from docker hub.
 func (asgmtEnv *assignmentEnvironmentImageBuilder) pullImage() error {
 	backgroundContext := context.Background()
 	dockerClient, err := client.NewEnvClient()
