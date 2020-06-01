@@ -1,3 +1,6 @@
+// Package configurations implements routines to read and store the
+// assignment environment configuration yaml file, get the docker instructions
+// in the specific format for every configuration.
 package configurations
 
 import (
@@ -7,13 +10,15 @@ import (
 	"testing"
 )
 
-var expectedAssgnEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
+var expectedAsgmtEnvDockerfileContents = `FROM assignmentexec/code-runner:1.0
 COPY . /code-runner
 RUN ./scripts/gcc_7.sh
 ENV SUPPORTED_LANGUAGE gcc
 
 `
 
+// TestAssignmentEnvDockerfileTemplate tests the Dockerfile generation
+// for the assignment environment config.
 func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 
 	err := os.Chdir("..")
@@ -26,5 +31,5 @@ func TestAssignmentEnvDockerfileTemplate(t *testing.T) {
 	_, err = output.WriteString(data.GetInstruction())
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedAssgnEnvDockerfileContents, output.String())
+	assert.Equal(t, expectedAsgmtEnvDockerfileContents, output.String())
 }
