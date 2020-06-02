@@ -9,7 +9,7 @@ Image builder is an application to build docker image for running assignments. T
 ### Assignment Environment Configurations
 - Provides the docker image tag corresponding to a particular version of code-runner. In addition, this configuration file includes the runtime environment requirements for the assignment. This includes the following.
     - Programming language used by students.
-    - Additional libraries that are needed, if any.
+    - Additional libraries and their installation commands that are needed, if any.
 Following is a sample of the configuration.
 ```commandline
 baseImage: "assignmentexec/code-runner:1.0"
@@ -34,7 +34,7 @@ Below is the list of supported languages and the corresponding versions.
 - Every supported language and its version has an installation script stored in `scripts` directory.
 - The scripts are named as `<language_version>.sh`. Example - For language - java and version - 8, script name should be `java_8.sh`.
 - The installation scripts are shell scripts that hold commands to install the corresponding language and its version.
-- To add support for a new language and version, add a new shell script that holds the appropriate commands for installation.
+- To add support for a new language and version, add a new shell script that follows thw above given naming convention and holds the appropriate commands for installation.
 
 ## Build and Publish Image
 - Using above configurations docker images are built locally and published to the docker hub.
