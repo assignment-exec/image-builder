@@ -1,12 +1,12 @@
 # Image Builder
 Image builder is an application to build docker image for running assignments. The image is built using user specific configurations.
 
-## Configurations
-- The configurations required for assignment environment is provided in yaml format.
-- A docker image for [code-runner](https://github.com/assignment-exec/code-runner) application is used as base image for any assignment environment.
+## Configuration
+- The configuration required for assignment environment is provided in yaml format.
+- A docker image for [code-runner](https://github.com/assignment-exec/code-runner) application is used as the base image for any assignment environment.
 - The code-runner application is used to build and run assignments.
 
-### Assignment Environment Configurations
+### Assignment Environment Configuration
 - Provides the docker image tag corresponding to a particular version of code-runner. In addition, this configuration file includes the runtime environment requirements for the assignment. This includes the following.
     - Programming language used by students.
     - Additional libraries and their installation commands that are needed, if any.
@@ -31,13 +31,12 @@ Below is the list of supported languages and the corresponding versions.
 - java 8 & 11
 
 ### Installation scripts
-- Every supported language and its version has an installation script stored in `scripts` directory.
+- Every supported language and its version has an installation script stored in [scripts](./scripts) directory.
 - The scripts are named as `<language_version>.sh`. Example - For language - java and version - 8, script name should be `java_8.sh`.
-- The installation scripts are shell scripts that hold commands to install the corresponding language and its version.
-- To add support for a new language and version, add a new shell script that follows thw above given naming convention and holds the appropriate commands for installation.
+- To add support for a new language and version, add a new shell script that follows the above given naming convention and holds the appropriate commands for installation.
 
 ## Build and Publish Image
-- Using above configurations docker images are built locally and published to the docker hub.
+- Using above configuration docker images are built locally and published to the docker hub.
 - Prerequisite for building an image is that docker engine should be installed.
 ### Docker Setup
 See [instructions](https://docs.docker.com/engine/installation/) for installing docker engine on different supported platforms.
