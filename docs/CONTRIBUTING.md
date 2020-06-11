@@ -1,41 +1,38 @@
 # Contributing to Image Builder
 
-The following is a set of guidelines for contributing to Image Builder and its packages, which are a part of [Assignment-Exec Organization](https://github.com/assignment-exec) on GitHub.
+First of all, THANK YOU for contributing to the project. When contributing, please follow the below guidelines.
 
 ## Submit Changes or New Features
 
 ### Clone the source code
-- To make changes to [image-builder](https://github.com/assignment-exec/image-builder) you need to first fork the repository and have the forked repository checked out locally.
-- After forking, copy the https url to clone the repository and use it in the command given below.
+- To make changes to [image-builder](https://github.com/assignment-exec/image-builder) you need to fork the repository and clone it.
+- Use the below commands to clone the forked repository using HTTPS and change the working directory.
 ```commandline
-$ git clone <https_url_of_repo>
-$ cd image-builder
+$ git clone <https_clone_url>
+$ cd image-builder  # Use chdir if working on windows.
 ```
 
-### Make changes in a new branch
-Each change must be made in a separate branch, created from `develop` branch. Use git commands to create a branch and add changes.
+### Branching
+Each change must be made in a separate branch, Branch out of the `develop` branch using the command below.
 ```commandline
-$ git checkout -b <branch_name>
-$ [edit files...]
-$ git add [files...]
+git checkout -b <branch_name> develop
 ```
 
 ### Commit changes
-- Write a clear log message for your commits. For small changes simple one-line messages are fine, but for big changes a detailed description should be provided.
-```commandline
-git commit
-```
-- First line in the commit messages should be a brief summary of the commit.
-- Follow the first line by a blank line and then the main description about the changes.
-- An ideal case would be that the commits are atomic i.e one feature or change is added per commit.
+- We like descriptive commit messages. When writing commit messages, make sure to follow the git commit guidelines.
+- It would be beneficial to have the commits atomic to ensure that the project has a cleaner history.
 
 ### Add Unit tests
-- For every change unit test cases should be added if possible. All the tests should be passed before submitting the change for review.
-- See [details](https://golang.org/pkg/testing/) for writing unit tests in golang.
+- For every change unit test cases should be added if possible. All the tests should pass before submitting the change for review.
+- See [details](https://golang.org/pkg/testing/) for writing unit tests in Go.
+- Once the unit tests have been added, run the below command to make sure that all the tests pass.
+```commandline
+make test
+```
 
 ### Send changes for review
-- Once the change is ready send a pull request to the `develop` branch of [image-builder](https://github.com/assignment-exec/image-builder/pull/new/develop) with a list of things you've done.
+- Once the changes are ready send a pull request to the `develop` branch of [image-builder](https://github.com/assignment-exec/image-builder/pull/new/develop) with a list of things you've done.
 - See [pull requests](http://help.github.com/pull-requests/) to know more about it. 
 
 
-Thank you for taking time to contribute !
+Once again, we THANK YOU for taking the time to contribute !
