@@ -19,7 +19,7 @@ git checkout -b <branch_name> develop
 ```
 
 ### Commit changes
-- We like descriptive commit messages. When writing commit messages, make sure to follow the git commit guidelines.
+- We like descriptive commit messages. When writing commit messages, make sure to follow the [git commit guidelines](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project).
 - It would be beneficial to have the commits atomic to ensure that the project has a cleaner history.
 
 ### Add Unit tests
